@@ -1,45 +1,104 @@
-# Filename	| License | Author | Source
-rocket02.wav	| Creative Commons Attribution-Share Alike 3.0 | Christian "Crystan" Hoffmann, UFO:AI, ugv-lasercannon-fire.ogg
-shotgn31.wav	| Creative Commons Attribution-Share Alike 3.0 | Christian "Crystan" Hoffmann, UFO:AI, bullet-shotgunmini.ogg
-flamloop.wav	| GPLv2 | cheapy | OpenArena 0.8.5, firesoft.wav
-grenad01.wav	| Public Domain | Crack dot Com | Golgotha SFX, old_generic.mp3
-explod02.wav	| Public Domain | Crack dot Com | Golgotha SFX, old_generic.mp3
-logo09.wav	| Public Domain | Crack dot Com | Golgotha SFX, gushing_wind_22khz_lp.wav
-eleacc01.wav	| GPLv2+ | DevUrandom | Warzone2100, hovstart.ogg
-eledec01.wav	| GPLv2+ | DevUrandom | Warzone2100, hovstop.ogg
-zap2.wav	| GPLv2+ | DevUrandom | Warzone2100, plslsr.ogg
-lava01.wav	| GPLv2 | scara | Scorched3D, lava1.wav
-telept01.wav	| GPLv2 | scara | Scorched3D, teleport.wav
-plasma03.wav	| GPLv2 | scara | Scorched3D, laser1.wav
-alien01.wav	| Public Domain | Lasse Collin | alien01_003.wav
-timerfst.wav	| Public Domain | Lasse Collin | N/A
-plasma02.wav	| Public Domain | Lasse Collin | N/A
-ammo02.wav	| Public Domain | Lasse Collin | N/A
-force01.wav	| Public Domain | Lasse Collin | sfx_force5_loop.flac
-speed02.wav	| Public Domain | Lasse Collin | sfx_pump10.wav
-ambcave2.wav	| Public Domain | Lasse Collin | sfx_droplet{3,4}.flac
-plpain01.wav	| GPLv2 | Lari Nieminen | Battle for Wesnoth, human-hit-5.ogg
-plpain04.wav	| GPLv2 | Lari Nieminen | Battle for Wesnoth, human-hit-1.ogg
-throw01.wav	| GPLv2 | Lari Nieminen | Battle for Wesnoth, throw-1.wav
-firebmb1.wav	| GPLv2 | cheapalert | Open Quartz, windfly.wav
-ball01.wav	| GPLv2 | rsmd (importer) | Open Quartz, stndr2.wav
-cleaner.wav	| GPLv2 | Alister Jackson | Open Quartz, slimbrn2.wav
-switch01.wav	| GPLv2 | serplord (importer) | Open Quartz, guncock.wav
-save01.wav	| GPLv2 | Greg Mapes | Open Quartz, secret.wav
-elect02.wav	| Public Domain | p0x | Open Quartz, ddoor1.wav
-crumble01.wav	| Public Domain | p0x | Open Quartz, wall01.wav
-delobj01.wav	| Public Domain | p0x | Open Quartz, distex.wav
-pland01.wav	| Public Domain | p0x | Open Quartz, foot3.wav
+This game uses sound files provided by OpenGameArt.org as well as Antti Harri's abuse-free-sounds project (github.com/aharri/abuse-free-sounds).
 
+Author
+filename        | original filename
+License
 
-The following sound effects have been copied over other files
-as well for the sake of getting at least something other
-than just silence.
+Crack dot Com Golgotha SFX via abuse-free-sounds
+explod02.wav    | old_generic.mp3
+grenad01.wav    | old_generic.mp3
+logo09.wav      | gushing_wind_22khz_lp.wav
+License: Public Domain
 
-Later they should be replaced with their own effects.
+Lasse Collin via abuse-free-sounds
+ambcave4.wav    | sfx_droplet{3,4}.flac
+ammo02.wav      | N/A
+force01.wav     | sfx_force5_loop.flac
+plasma02.wav    | N/A
+speed02.wav     | sfx_pump10.wav
+timerfst.wav    | N/A
+License: Public Domain
 
-zap2.wav:	zap3.wav
-plpain01.wav:	plpain02.wav
-plpain04.wav:	plpain10.wav
-telept01.wav:	endlvl02.wav
+p0x Open Quartz via abuse-free-sounds
+crumble01.wav   | wall01.wav
+delobj01.wav    | distex.wav
+elect02.wav     | ddoor1.wav
+pland01.wav     | foot3.wav
+License: Public Domain
 
+Michel Baradari (apollo-music.de) via OpenGameArt.org
+adie02.wav      | deathr.wav (15-monster-gruntpaindeath-sounds)
+adie03.wav      | deaths.wav (15-monster-gruntpaindeath-sounds)
+alien01.wav     | deathd.wav (15-monster-gruntpaindeath-sounds)
+plpain01.wav    | pain1.wav (11-male-human-paindeath-sounds)
+plpain02.wav    | pain2.wav (11-male-human-paindeath-sounds)
+plpain04.wav    | pain6.wav (11-male-human-paindeath-sounds)
+plpain10.wav    | pain5.wav (11-male-human-paindeath-sounds)
+shotgn31.wav    | pistol.wav (chaingun-pistol-rifle-shotgun-shots)
+License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+
+Ogrebane via OpenGameArt.org
+adie05.wav      | monster-17.wav (monster-sound-pack-volume-1)
+amb13.wav       | ambience-5.wav (dark-ambiences)
+endlvl02.wav    | sci-fi 1_2.wav [copy of telept01.wav]
+poof05.wav      | monster-13.wav (monster-sounds-volume-2)
+poof06.wav      | monster-12.wav (monster-sounds-volume-2)
+robot02.wav     | monster-3.wav (monster_sfx_pack)
+pldeth02.wav    | monster-6.wav (monster_sfx_pack)
+pldeth04.wav    | monster-6.wav (monster_sfx_pack)
+pldeth05.wav    | monster-6.wav (monster_sfx_pack)
+pldeth07.wav    | monster-6.wav (monster_sfx_pack)
+scream02.wav    | monster-1.wav (monster-sounds-volume-2)
+scream03.wav    | monster-2.wav (monster-sounds-volume-2)
+scream08.wav    | monster-9.wav (monster-sounds-volume-2)
+telept01.wav    | sci-fi 1_2.wav (sci-fi-vehicle-sound)
+License: Public Domain
+
+Paulius Jurgelevicius via OpenGameArt.org (gun-reload-lock-or-click-sound)
+ammo01.wav      | gun_reload_lock_or_click_sound.mp3
+License: Public Domain
+
+Iwan Gabovitch (qubodup) via OpenGameArt.org
+aslash01.wav    | swosh-01.flac (swish-bamboo-stick-weapon-swhoshes)
+throw01.wav     | 60009__qubodup__swosh_22 (wind-hit-time-morph)
+clang1.wav      | ball01.wav (metal-clang-explosions-zing)
+License: Public Domain
+
+Blender Foundation (Yo Frankie) via OpenGameArt.org
+ambcave2.wav    | amb_waterdrip_1 (ambient-water-drips)
+ambcave3.wav    | amb_waterdrip_3 (ambient-water-drips)
+rocket02.wav    | sfx_fly.flac (fly-launch-jet-yo-frankie)
+License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+
+Bart Kelsey via OpenGameArt.org
+fadeon01.wav    | atomize.wav (18-random-video-game-sound-effects)
+heart01.wav     | heartbeat_slow_0.wav (heartbeat-sounds)
+plasma03.wav    | silencer.wav (hollywood-style-pistol-silencer-sound-effect)
+eleacc01.wav    | steam hisses - Marker #1.wav (steam-release-sounds)
+eledec01.wav    | steam hisses - Marker #5.wav (steam-release-sounds)
+doorup01.wav    | steam hisses - Marker #5.wav (steam-release-sounds)
+doorup02.wav    | steam hisses - Marker #5.wav (steam-release-sounds)
+License: Public Domain
+
+kddekadenz via OpenGameArt.org (boiling-water-loops)
+lava01.wav      | cooking_without_cover_01_0.wav
+License: Public Domain
+
+Kenney Vleugels (www.kenney.nl) via OpenGameArt.org
+save01.wav      | highDown.mp3 (63-digital-sound-effects-lasers-phasers-space-etc)
+save05.wav      | powerUp4.mp3 (63-digital-sound-effects-lasers-phasers-space-etc)
+switch01.wav    | switch16.wav (51-ui-sound-effects-buttons-switches-and-clicks)
+License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+
+HorrorPen via OpenGameArt.org (41-random-sound-effects)
+spring03.wav    | 4.wav
+License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+
+Devin Watson via OpenGameArt.org (laser-fire)
+zap2.wav        | laser1.flac
+zap3.wav        | laser2.flac
+License: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+
+Felix Plesoianu (felix.plesoianu.ro) via OpenGameArt.org (buzz-grid-sounds)
+bzzzt.wav       | health01.wav
+License: Public Domain

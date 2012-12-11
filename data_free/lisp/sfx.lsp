@@ -14,7 +14,7 @@
 ;; speed sound
 (def_sound 'SPEED_SND      (sfxdir "speed02.wav"))
 
-(setq LOW_HEALTH_SND SPEED_SND)
+(def_sound 'LOW_HEALTH_SND (sfxdir "heart01.wav"))
 
 ;; laser hitting somehting it can't kill
 (def_sound 'LPING_SND      (sfxdir "lasrmis2.wav"))
@@ -22,8 +22,8 @@
 ;; light saber - should be short
 (def_sound 'LSABER_SND     (sfxdir "plasma02.wav"))
 
-;; when you activate save console
-(def_sound 'SAVE_CONS_SND  (sfxdir "save01.wav"))
+;; when you activate save console                 ; abuse-free-sounds patch
+(def_sound 'SAVE_CONS_SND  (sfxdir "save01.wav")) ; abuse-free-sounds patch
 
 ;; when you save at a console
 (def_sound 'SAVE_SND       (sfxdir "save05.wav"))
