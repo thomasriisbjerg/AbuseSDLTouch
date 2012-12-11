@@ -22,6 +22,9 @@
 ;; light saber - should be short
 (def_sound 'LSABER_SND     (sfxdir "plasma02.wav"))
 
+;; when you activate save console
+(def_sound 'SAVE_CONS_SND  (sfxdir "save01.wav"))
+
 ;; when you save at a console
 (def_sound 'SAVE_SND       (sfxdir "save05.wav"))
 

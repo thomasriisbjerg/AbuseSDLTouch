@@ -869,6 +869,7 @@
 		 (if (and (touching_bg) (with_object (bg) (pressing_action_key)))
 		     (set_aistate 2)))
 	      (2 (set_state running)	   
+	         (play_sound SAVE_CONS_SND 127 (x) (y))
 		 (set_aistate 3))
 	      (3 (set_aistate 4))	    
 	      (4 

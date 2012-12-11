@@ -815,23 +815,12 @@ int CacheList::reg(char const *filename, char const *name, int type, int rm_dups
 
     if (type == SPEC_EXTERN_SFX)
     {
-        // If an extern sound effect then just make sure it's there. If sound
-        // is disabled, ignore the load error, just pretend it's all OK.
+    	// Missing sound effect is not a critical error, so we don't
+    	// quit when error happens.
         bFILE *check = open_file(filename, "rb");
-        if (!check->open_failure())
+        if (check->open_failure())
         {
-            char buf[4];
-            check->read(buf, 4);
-            if (memcmp(buf, "RIFF", 4))
-            {
-                printf("File %s is not a WAV file\n", filename);
-                exit(0);
-            }
-        }
-        else if (sound_avail)
-        {
-            printf("Unable to open file '%s' for reading\n", filename);
-            exit(0);
+        	printf("Unable to open sfx file '%s' for reading, ignoring.\n", filename);
         }
         delete check;
     }

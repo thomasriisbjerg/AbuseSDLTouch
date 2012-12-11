@@ -1,0 +1,45 @@
+# Filename	| License | Author | Source
+rocket02.wav	| Creative Commons Attribution-Share Alike 3.0 | Christian "Crystan" Hoffmann, UFO:AI, ugv-lasercannon-fire.ogg
+shotgn31.wav	| Creative Commons Attribution-Share Alike 3.0 | Christian "Crystan" Hoffmann, UFO:AI, bullet-shotgunmini.ogg
+flamloop.wav	| GPLv2 | cheapy | OpenArena 0.8.5, firesoft.wav
+grenad01.wav	| Public Domain | Crack dot Com | Golgotha SFX, old_generic.mp3
+explod02.wav	| Public Domain | Crack dot Com | Golgotha SFX, old_generic.mp3
+logo09.wav	| Public Domain | Crack dot Com | Golgotha SFX, gushing_wind_22khz_lp.wav
+eleacc01.wav	| GPLv2+ | DevUrandom | Warzone2100, hovstart.ogg
+eledec01.wav	| GPLv2+ | DevUrandom | Warzone2100, hovstop.ogg
+zap2.wav	| GPLv2+ | DevUrandom | Warzone2100, plslsr.ogg
+lava01.wav	| GPLv2 | scara | Scorched3D, lava1.wav
+telept01.wav	| GPLv2 | scara | Scorched3D, teleport.wav
+plasma03.wav	| GPLv2 | scara | Scorched3D, laser1.wav
+alien01.wav	| Public Domain | Lasse Collin | alien01_003.wav
+timerfst.wav	| Public Domain | Lasse Collin | N/A
+plasma02.wav	| Public Domain | Lasse Collin | N/A
+ammo02.wav	| Public Domain | Lasse Collin | N/A
+force01.wav	| Public Domain | Lasse Collin | sfx_force5_loop.flac
+speed02.wav	| Public Domain | Lasse Collin | sfx_pump10.wav
+ambcave2.wav	| Public Domain | Lasse Collin | sfx_droplet{3,4}.flac
+plpain01.wav	| GPLv2 | Lari Nieminen | Battle for Wesnoth, human-hit-5.ogg
+plpain04.wav	| GPLv2 | Lari Nieminen | Battle for Wesnoth, human-hit-1.ogg
+throw01.wav	| GPLv2 | Lari Nieminen | Battle for Wesnoth, throw-1.wav
+firebmb1.wav	| GPLv2 | cheapalert | Open Quartz, windfly.wav
+ball01.wav	| GPLv2 | rsmd (importer) | Open Quartz, stndr2.wav
+cleaner.wav	| GPLv2 | Alister Jackson | Open Quartz, slimbrn2.wav
+switch01.wav	| GPLv2 | serplord (importer) | Open Quartz, guncock.wav
+save01.wav	| GPLv2 | Greg Mapes | Open Quartz, secret.wav
+elect02.wav	| Public Domain | p0x | Open Quartz, ddoor1.wav
+crumble01.wav	| Public Domain | p0x | Open Quartz, wall01.wav
+delobj01.wav	| Public Domain | p0x | Open Quartz, distex.wav
+pland01.wav	| Public Domain | p0x | Open Quartz, foot3.wav
+
+
+The following sound effects have been copied over other files
+as well for the sake of getting at least something other
+than just silence.
+
+Later they should be replaced with their own effects.
+
+zap2.wav:	zap3.wav
+plpain01.wav:	plpain02.wav
+plpain04.wav:	plpain10.wav
+telept01.wav:	endlvl02.wav
+

@@ -25,7 +25,12 @@
 #include <cstring>
 
 #include <SDL.h>
-#include <SDL/SDL_mixer.h>
+#if defined __APPLE__
+#include <SDL_mixer/SDL_mixer.h>
+#else
+//#include <SDL/SDL_mixer.h>
+#include <SDL_mixer.h>
+#endif
 
 #include "sound.h"
 #include "hmi.h"
@@ -42,7 +47,7 @@ static SDL_AudioSpec audioObtained;
 //
 int sound_init( int argc, char **argv )
 {
-    char *sfxdir, *datadir;
+    char *datadir;
 
     // Disable sound if requested.
     if( flags.nosound )
@@ -51,20 +56,6 @@ int sound_init( int argc, char **argv )
         printf( "Sound: Disabled (-nosound)\n" );
         return 0;
     }
-
-    // Check for the sfx directory, disable sound if we can't find it.
-    datadir = get_filename_prefix();
-    sfxdir = (char *)malloc(strlen(datadir) + 17 + 1);
-    sprintf(sfxdir, "%s/sfx/ambcave1.wav", datadir);
-    FILE *f = fopen(sfxdir, "r");
-    if (!f)
-    {
-        // Didn't find the directory, so disable sound.
-        printf( "Sound: Disabled (couldn't find the sfx directory)\n" );
-        return 0;
-    }
-    fclose(f);
-    free(sfxdir);
 
     if (Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 128) < 0)
     {
@@ -111,7 +102,10 @@ sound_effect::sound_effect(char const *filename)
 
     jFILE fp(filename, "rb");
     if (fp.open_failure())
+    {
+    	m_chunk=NULL;
         return;
+    }
 
     void *temp_data = malloc(fp.file_size());
     fp.read(temp_data, fp.file_size());
@@ -127,7 +121,7 @@ sound_effect::sound_effect(char const *filename)
 //
 sound_effect::~sound_effect()
 {
-    if(!sound_enabled)
+    if(!sound_enabled || !m_chunk)
         return;
 
     // Sound effect deletion only happens on level load, so there
