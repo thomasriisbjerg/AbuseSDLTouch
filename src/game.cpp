@@ -416,7 +416,9 @@ void Game::set_state(int new_state)
             first_view->pan_y = player_list->yoff();
         }
         else
+        {
             first_view = new view(NULL, NULL, 0);
+        }
         first_view->m_aa.x = (xres + 1) / 2 - 155;
         first_view->m_aa.y = (yres + 1) / 2 - 95;
         first_view->m_bb.x = (xres + 1) / 2 + 155;
@@ -1287,6 +1289,7 @@ Game::Game(int argc, char **argv)
   top_menu = joy_win = NULL;
   old_view = first_view = NULL;
   nplayers = 1;
+  state = START_STATE;         // first set the state to one that has windows
 
   help_text_frames = 0;
   strcpy(help_text, "");
@@ -1432,7 +1435,6 @@ Game::Game(int argc, char **argv)
   if(dev & EDIT_MODE)
     set_frame_size(0);
 //  do_intro();
-  state = START_STATE;         // first set the state to one that has windows
 
 
   if(start_running)
