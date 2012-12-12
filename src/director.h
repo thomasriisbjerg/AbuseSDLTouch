@@ -33,6 +33,9 @@ public :
   void set_abort(int x) { scene_abort=x; }
 } ;
 
+class JCFont;
+int text_draw(int y, int x1, int y1, int x2, int y2, char const *buf, JCFont *font, uint8_t *cmap, char color, bool skip_space = true);
+
 extern director scene_director;
 
 

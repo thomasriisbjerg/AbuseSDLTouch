@@ -70,8 +70,9 @@ int demo_manager::start_recording(char *filename)
   record_file=open_file(filename,"wb");
   if (record_file->open_failure()) { delete record_file; return 0; }
 
-  char name[100];
-  strcpy(name,current_level->name());
+  const size_t namesize = 100;
+  char name[namesize];
+  strncpy(name,current_level->name(),namesize-1); name[namesize-1] = 0;
 
   the_game->load_level(name);
   record_file->write((void *)"DEMO,VERSION:2",14);
@@ -164,8 +165,9 @@ int demo_manager::start_playing(char *filename)
       record_file->read(&diff,1)!=1)
   { delete record_file; return 0; }
 
-  char tname[100],*c;
-  strcpy(tname,name);
+  const size_t tnamesize = 100;
+  char tname[tnamesize],*c;
+  strncpy(tname,name,tnamesize-1); tname[tnamesize-1] = 0;
   c=tname;
   while (*c) { if (*c=='\\') *c='/'; c++; }
 

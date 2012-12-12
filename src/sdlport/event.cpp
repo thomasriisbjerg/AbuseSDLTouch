@@ -33,15 +33,65 @@
 #include "timing.h"
 #include "sprite.h"
 #include "game.h"
+#include "dev.h"
+#include "setup.h"
+#include "joy.h"
 
+extern int has_multitouch;
 extern int get_key_binding(char const *dir, int i);
 extern int mouse_xscale, mouse_yscale;
+extern int xwinres, ywinres;
+extern flags_struct flags;
 short mouse_buttons[5] = { 0, 0, 0, 0, 0 };
+
+/*int touch_index = -1;
+ivec2 aim_aa = ivec2(720, 360);
+ivec2 aim_bb = ivec2(960, 600);
+int aim_threshold = 30;
+int move_touch_index = -1;
+bool move_up_pressed = false;
+bool move_down_pressed = false;
+bool move_left_pressed = false;
+bool move_right_pressed = false;
+int move_threshold = 40;
+ivec2 move_aa = ivec2(0, 360);
+ivec2 move_bb = ivec2(240, 600);
+
+int special_touch_index = -1;
+bool special_pressed = false;
+ivec2 special_aa = ivec2(320-33, 33);
+ivec2 special_bb = ivec2(320, 2*33);
+int pause_touch_index = -1;
+bool pause_pressed = false;
+ivec2 pause_aa = ivec2(85, 50);
+ivec2 pause_bb = ivec2(320-85, 150);
+int statbar_touch_index = -1;
+bool statbar_pressed = false;
+int statbar_weapon_width = 33;
+int statbar_weapon_selected = -1;
+ivec2 statbar_aa = ivec2(47, 0);
+ivec2 statbar_bb = ivec2(47 + 7*33, 33);*/
+
+void show_help(const char *msg, ...)
+{
+	va_list fmtargs;
+	const int buffer_size = 200;
+	char buffer[buffer_size];
+	va_start(fmtargs, msg);
+	vsnprintf(buffer, buffer_size, msg, fmtargs);
+	va_end(fmtargs);
+	the_game->show_help(buffer);
+}
 
 void EventHandler::SysInit()
 {
     // Ignore activate events
-    SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
+    //SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
+#ifdef WEBOS
+	SDL_EventState(SDL_JOYBUTTONDOWN, SDL_IGNORE);
+	SDL_EventState(SDL_JOYBUTTONUP, SDL_IGNORE);
+	SDL_EventState(SDL_JOYAXISMOTION, SDL_IGNORE);
+#endif
 }
 
 void EventHandler::SysWarpMouse(ivec2 pos)
@@ -59,6 +109,16 @@ int EventHandler::IsPending()
         m_pending = 1;
 
     return m_pending;
+}
+
+void EventHandler::reset_keymap()
+{
+	m_button = 0;
+	mouse_buttons[0] = 0;
+	mouse_buttons[1] = 0;
+	mouse_buttons[2] = 0;
+	mouse_buttons[3] = 0;
+	mouse_buttons[4] = 0;
 }
 
 //
@@ -80,60 +140,132 @@ void EventHandler::SysEvent(Event &ev)
     if (!SDL_PollEvent(&sdlev))
         return; // This should not happen
 
-    // Sort the mouse out
-    int x, y;
-    uint8_t buttons = SDL_GetMouseState(&x, &y);
-    x = Min((x << 16) / mouse_xscale, main_screen->Size().x - 1);
-    y = Min((y << 16) / mouse_yscale, main_screen->Size().y - 1);
-    ev.mouse_move.x = x;
-    ev.mouse_move.y = y;
-    ev.type = EV_MOUSE_MOVE;
+	// Sort the mouse out
+	int x, y;
+	uint8_t buttons = SDL_GetMouseState(&x, &y);
 
-    // Left button
-    if((buttons & SDL_BUTTON(1)) && !mouse_buttons[1])
+	// remove window offset
+	x = x - (xwinres / 2 - flags.xres / 2);
+	y = y - (ywinres / 2 - flags.yres / 2);
+
+	// scale from window to main_screen coords
+	x = (x << 16) / mouse_xscale;
+	y = (y << 16) / mouse_yscale;
+
+	// clamp to main_screen coords
+	x = Min(Max(x, 0), main_screen->Size().x - 1);
+	y = Min(Max(y, 0), main_screen->Size().y - 1);
+
+    if (wm->m_first || !playing_state(the_game->state) || !has_multitouch)
     {
-        ev.type = EV_MOUSE_BUTTON;
-        mouse_buttons[1] = !mouse_buttons[1];
-        ev.mouse_button |= LEFT_BUTTON;
+		ev.mouse_move.x = x;
+		ev.mouse_move.y = y;
+		ev.type = EV_MOUSE_MOVE;
+
+		// Left button
+		if((buttons & SDL_BUTTON(1)) && !mouse_buttons[1])
+		{
+			ev.type = EV_MOUSE_BUTTON;
+			mouse_buttons[1] = !mouse_buttons[1];
+			ev.mouse_button |= LEFT_BUTTON;
+		}
+		else if(!(buttons & SDL_BUTTON(1)) && mouse_buttons[1])
+		{
+			ev.type = EV_MOUSE_BUTTON;
+			mouse_buttons[1] = !mouse_buttons[1];
+			ev.mouse_button &= (0xff - LEFT_BUTTON);
+		}
+
+		// Middle button
+		if((buttons & SDL_BUTTON(2)) && !mouse_buttons[2])
+		{
+			ev.type = EV_MOUSE_BUTTON;
+			mouse_buttons[2] = !mouse_buttons[2];
+			ev.mouse_button |= LEFT_BUTTON;
+			ev.mouse_button |= RIGHT_BUTTON;
+		}
+		else if(!(buttons & SDL_BUTTON(2)) && mouse_buttons[2])
+		{
+			ev.type = EV_MOUSE_BUTTON;
+			mouse_buttons[2] = !mouse_buttons[2];
+			ev.mouse_button &= (0xff - LEFT_BUTTON);
+			ev.mouse_button &= (0xff - RIGHT_BUTTON);
+		}
+
+		// Right button
+		if((buttons & SDL_BUTTON(3)) && !mouse_buttons[3])
+		{
+			ev.type = EV_MOUSE_BUTTON;
+			mouse_buttons[3] = !mouse_buttons[3];
+			ev.mouse_button |= RIGHT_BUTTON;
+		}
+		else if(!(buttons & SDL_BUTTON(3)) && mouse_buttons[3])
+		{
+			ev.type = EV_MOUSE_BUTTON;
+			mouse_buttons[3] = !mouse_buttons[3];
+			ev.mouse_button &= (0xff - RIGHT_BUTTON);
+		}
     }
-    else if(!(buttons & SDL_BUTTON(1)) && mouse_buttons[1])
+    else if (m_button != 0)
     {
-        ev.type = EV_MOUSE_BUTTON;
-        mouse_buttons[1] = !mouse_buttons[1];
-        ev.mouse_button &= (0xff - LEFT_BUTTON);
+    	// Left button
+		if(!(buttons & SDL_BUTTON(1)) && mouse_buttons[1])
+		{
+			ev.type = EV_MOUSE_BUTTON;
+			mouse_buttons[1] = !mouse_buttons[1];
+			ev.mouse_button &= (0xff - LEFT_BUTTON);
+		}
+
+		// Middle button
+		if(!(buttons & SDL_BUTTON(2)) && mouse_buttons[2])
+		{
+			ev.type = EV_MOUSE_BUTTON;
+			mouse_buttons[2] = !mouse_buttons[2];
+			ev.mouse_button &= (0xff - LEFT_BUTTON);
+			ev.mouse_button &= (0xff - RIGHT_BUTTON);
+		}
+
+		// Right button
+		if(!(buttons & SDL_BUTTON(3)) && mouse_buttons[3])
+		{
+			ev.type = EV_MOUSE_BUTTON;
+			mouse_buttons[3] = !mouse_buttons[3];
+			ev.mouse_button &= (0xff - RIGHT_BUTTON);
+		}
     }
 
-    // Middle button
-    if((buttons & SDL_BUTTON(2)) && !mouse_buttons[2])
+    int _x;
+    int _y;
+    switch (sdlev.type)
     {
-        ev.type = EV_MOUSE_BUTTON;
-        mouse_buttons[2] = !mouse_buttons[2];
-        ev.mouse_button |= LEFT_BUTTON;
-        ev.mouse_button |= RIGHT_BUTTON;
-    }
-    else if(!(buttons & SDL_BUTTON(2)) && mouse_buttons[2])
-    {
-        ev.type = EV_MOUSE_BUTTON;
-        mouse_buttons[2] = !mouse_buttons[2];
-        ev.mouse_button &= (0xff - LEFT_BUTTON);
-        ev.mouse_button &= (0xff - RIGHT_BUTTON);
+    case SDL_MOUSEMOTION:
+    	_x = sdlev.motion.x;
+    	_y = sdlev.motion.y;
+    	break;
+    case SDL_MOUSEBUTTONDOWN:
+    case SDL_MOUSEBUTTONUP:
+    	_x = sdlev.button.x;
+    	_y = sdlev.button.y;
+    	break;
+    default:
+    	SDL_GetMouseState(&_x, &_y);
+    	break;
     }
 
-    // Right button
-    if((buttons & SDL_BUTTON(3)) && !mouse_buttons[3])
-    {
-        ev.type = EV_MOUSE_BUTTON;
-        mouse_buttons[3] = !mouse_buttons[3];
-        ev.mouse_button |= RIGHT_BUTTON;
-    }
-    else if(!(buttons & SDL_BUTTON(3)) && mouse_buttons[3])
-    {
-        ev.type = EV_MOUSE_BUTTON;
-        mouse_buttons[3] = !mouse_buttons[3];
-        ev.mouse_button &= (0xff - RIGHT_BUTTON);
-    }
-    m_pos = ivec2(ev.mouse_move.x, ev.mouse_move.y);
-    m_button = ev.mouse_button;
+    // remove window offset
+	x = _x - (xwinres / 2 - flags.xres / 2);
+	y = _y - (ywinres / 2 - flags.yres / 2);
+
+	// scale from window to main_screen coords
+	x = (x << 16) / mouse_xscale;
+	y = (y << 16) / mouse_yscale;
+
+	// clamp to main_screen coords
+	x = Min(Max(x, 0), main_screen->Size().x - 1);
+	y = Min(Max(y, 0), main_screen->Size().y - 1);
+
+    ivec2 touchview = ivec2(_x, _y);
+    ivec2 touchgame = ivec2(x, y);
 
     // Sort out other kinds of events
     switch(sdlev.type)
@@ -141,9 +273,255 @@ void EventHandler::SysEvent(Event &ev)
     case SDL_QUIT:
         exit(0);
         break;
+    case SDL_ACTIVEEVENT:
+    	if (wm->m_first == 0 && the_game->state == RUN_STATE && sdlev.active.gain == 0 && (sdlev.active.state & SDL_APPINPUTFOCUS))
+    	{
+    		// simulate a P keypress to pause the game
+			ev.type = EV_KEY;
+			ev.key = 'p';
+			ev.mouse_move = m_pos;
+			ev.mouse_button = m_button;
+
+			Event *e = new Event();
+			e->type = EV_KEYRELEASE;
+			e->key = 'p';
+			e->mouse_move = m_pos;
+			e->mouse_button = m_button;
+			Push(e);
+    	}
+    	break;
+    case SDL_MOUSEMOTION:
+    	touch.mouse_motion(sdlev.button.which, touchgame, touchview, ev);
+    	/*if (the_game->state == RUN_STATE && sdlev.button.which == statbar_touch_index)
+    	{
+    		int dx = touchgame.x - statbar_aa.x;
+    		int weapon_index = dx / statbar_weapon_width;
+    		weapon_index = weapon_index < 0 ? 0 : weapon_index;
+    		weapon_index = weapon_index > 7 ? 7 : weapon_index;
+
+    		if (weapon_index != statbar_weapon_selected)
+    		{
+    			ev.type = EV_KEYRELEASE;
+    			ev.key = '1' + statbar_weapon_selected;
+    			ev.mouse_move = m_pos;
+    			ev.mouse_button = m_button;
+
+				Event *e = new Event();
+				e->type = EV_KEY;
+				e->key = '1' + weapon_index;
+				e->mouse_move = m_pos;
+				e->mouse_button = m_button;
+				Push(e);
+
+				statbar_weapon_selected = weapon_index;
+    		}
+    	}
+    	if (the_game->state == RUN_STATE && sdlev.button.which == move_touch_index)
+    	{
+    		int dx = sdlev.button.x - (move_bb.x + move_aa.x) / 2;
+    		int dy = sdlev.button.y - (move_bb.y + move_aa.y) / 2;
+
+    		bool first_event = true;
+
+			if ((dx > move_threshold) != move_right_pressed)
+			{
+				move_right_pressed = !move_right_pressed;
+
+				Event *e = first_event ? &ev : new Event();
+				e->type = move_right_pressed ? EV_KEY : EV_KEYRELEASE;
+				e->key = get_key_binding("right", 0);
+				e->mouse_move = m_pos;
+				e->mouse_button = m_button;
+				if (!first_event)
+					Push(e);
+				first_event = false;
+			}
+
+			if ((dx < -move_threshold) != move_left_pressed)
+			{
+				move_left_pressed = !move_left_pressed;
+
+				Event *e = first_event ? &ev : new Event();
+				e->type = move_left_pressed ? EV_KEY : EV_KEYRELEASE;
+				e->key = get_key_binding("left", 0);
+				e->mouse_move = m_pos;
+				e->mouse_button = m_button;
+				if (!first_event)
+					Push(e);
+				first_event = false;
+			}
+
+			if ((dy < -move_threshold) != move_up_pressed)
+			{
+				move_up_pressed = !move_up_pressed;
+
+				Event *e = first_event ? &ev : new Event();
+				e->type = move_up_pressed ? EV_KEY : EV_KEYRELEASE;
+				e->key = get_key_binding("up", 0);
+				e->mouse_move = m_pos;
+				e->mouse_button = m_button;
+				if (!first_event)
+					Push(e);
+				first_event = false;
+			}
+
+			if ((dy > move_threshold) != move_down_pressed)
+			{
+				move_down_pressed = !move_down_pressed;
+
+				Event *e = first_event ? &ev : new Event();
+				e->type = move_down_pressed ? EV_KEY : EV_KEYRELEASE;
+				e->key = get_key_binding("down", 0);
+				e->mouse_move = m_pos;
+				e->mouse_button = m_button;
+				if (!first_event)
+					Push(e);
+				first_event = false;
+			}
+    	}
+    	if (the_game->state == RUN_STATE && sdlev.button.which == touch_index)
+    	{
+    	    int dx = sdlev.button.x - (aim_bb.x + aim_aa.x) / 2;
+    	    int dy = sdlev.button.y - (aim_bb.y + aim_aa.y) / 2;
+    	    int dlen2 = dx * dx + dy * dy;
+
+			if (dlen2 < aim_threshold * aim_threshold)
+			{
+				dx = 0;
+				dy = 0;
+			}
+
+			ev.type = EV_AIM_X;
+			ev.key = dx;
+			ev.mouse_move = m_pos;
+			ev.mouse_button = m_button;
+
+			Event *ev2 = new Event();
+			ev2->type = EV_AIM_Y;
+			ev2->key = dy;
+			ev2->mouse_move = m_pos;
+			ev2->mouse_button = m_button;
+			Push(ev2);
+    	}*/
+    	break;
     case SDL_MOUSEBUTTONUP:
         switch(sdlev.button.button)
         {
+        case 1:
+        	touch.mouse_up(sdlev.button.which, ev);
+        	/*if (sdlev.button.which == statbar_touch_index)
+			{
+        		statbar_touch_index = -1;
+
+        		statbar_pressed = false;
+
+				ev.type = EV_KEYRELEASE;
+				ev.key = '1' + statbar_weapon_selected;
+				ev.mouse_move = m_pos;
+				ev.mouse_button = m_button;
+			}
+        	if (sdlev.button.which == pause_touch_index)
+        	{
+        		pause_touch_index = -1;
+
+				pause_pressed = false;
+				//show_help("release pause");
+
+				ev.type = EV_KEYRELEASE;
+				ev.key = 'p';
+				ev.mouse_move = m_pos;
+				ev.mouse_button = m_button;
+        	}
+        	if (sdlev.button.which == special_touch_index)
+        	{
+        		special_touch_index = -1;
+        	}
+        	if (sdlev.button.which == move_touch_index)
+        	{
+        		move_touch_index = -1;
+
+        		bool first_event = true;
+
+        		if (move_right_pressed)
+				{
+					move_right_pressed = false;
+
+					Event *e = first_event ? &ev : new Event();
+					e->type = EV_KEYRELEASE;
+					e->key = get_key_binding("right", 0);
+					e->mouse_move = m_pos;
+					e->mouse_button = m_button;
+					if (!first_event)
+						Push(e);
+					first_event = false;
+				}
+
+        		if (move_left_pressed)
+				{
+					move_left_pressed = false;
+
+					Event *e = first_event ? &ev : new Event();
+					e->type = EV_KEYRELEASE;
+					e->key = get_key_binding("left", 0);
+					e->mouse_move = m_pos;
+					e->mouse_button = m_button;
+					if (!first_event)
+						Push(e);
+					first_event = false;
+				}
+
+        		if (move_up_pressed)
+				{
+					move_up_pressed = false;
+
+					Event *e = first_event ? &ev : new Event();
+					e->type = EV_KEYRELEASE;
+					e->key = get_key_binding("up", 0);
+					e->mouse_move = m_pos;
+					e->mouse_button = m_button;
+					if (!first_event)
+						Push(e);
+					first_event = false;
+				}
+
+        		if (move_down_pressed)
+				{
+					move_down_pressed = false;
+
+					Event *e = first_event ? &ev : new Event();
+					e->type = EV_KEYRELEASE;
+					e->key = get_key_binding("down", 0);
+					e->mouse_move = m_pos;
+					e->mouse_button = m_button;
+					if (!first_event)
+						Push(e);
+					first_event = false;
+				}
+        	}
+        	if (sdlev.button.which == touch_index)
+        	{
+        		touch_index = -1;
+
+    			ev.type = EV_AIM_X;
+    			ev.key = 0;
+    			ev.mouse_move = m_pos;
+    			ev.mouse_button = m_button;
+
+    			Event *ev2 = new Event();
+    			ev2->type = EV_AIM_Y;
+    			ev2->key = 0;
+    			ev2->mouse_move = m_pos;
+    			ev2->mouse_button = m_button;
+    			Push(ev2);
+
+				Event *ev3 = new Event();
+				ev3->type = EV_KEYRELEASE;
+				ev3->key = get_key_binding("b2", 0);
+				ev3->mouse_move = m_pos;
+				ev3->mouse_button = m_button;
+				Push(ev3);
+        	}*/
+        	break;
         case 4:        // Mouse wheel goes up...
             ev.key = get_key_binding("b4", 0);
             ev.type = EV_KEYRELEASE;
@@ -157,6 +535,151 @@ void EventHandler::SysEvent(Event &ev)
     case SDL_MOUSEBUTTONDOWN:
         switch(sdlev.button.button)
         {
+        case 1:
+        	touch.mouse_down(sdlev.button.which, touchgame, touchview, ev);
+        	/*if (wm->m_first == 0 && the_game->state == RUN_STATE && touchgame > statbar_aa && touchgame <= statbar_bb && statbar_touch_index == -1)
+			{
+        		statbar_touch_index = sdlev.button.which;
+
+				int dx = touchgame.x - statbar_aa.x;
+				int weapon_index = dx / statbar_weapon_width;
+				weapon_index = weapon_index < 0 ? 0 : weapon_index;
+				weapon_index = weapon_index > 7 ? 7 : weapon_index;
+
+				statbar_pressed = true;
+
+				ev.type = EV_KEY;
+				ev.key = '1' + weapon_index;
+				ev.mouse_move = m_pos;
+				ev.mouse_button = m_button;
+
+				statbar_weapon_selected = weapon_index;
+			}
+        	if (wm->m_first == 0 && (the_game->state == RUN_STATE || the_game->state == PAUSE_STATE) && touchgame > pause_aa && touchgame <= pause_bb && pause_touch_index == -1)
+        	{
+        		pause_touch_index = sdlev.button.which;
+
+        		pause_pressed = true;
+        		the_game->show_help(symbol_str("pause_help"));
+
+    			ev.type = EV_KEY;
+    			ev.key = 'p';
+    			ev.mouse_move = m_pos;
+    			ev.mouse_button = m_button;
+        	}
+        	if (wm->m_first == 0 && the_game->state == RUN_STATE && touchgame > special_aa && touchgame <= special_bb && special_touch_index == -1)
+        	{
+        		//show_help("special %i", sdlev.button.which);
+        		special_touch_index = sdlev.button.which;
+
+        		special_pressed = !special_pressed;
+
+    			ev.type = special_pressed ? EV_KEY : EV_KEYRELEASE;
+    			ev.key = get_key_binding("b1", 0);
+    			ev.mouse_move = m_pos;
+    			ev.mouse_button = m_button;
+        	}
+        	if (wm->m_first == 0 && the_game->state == RUN_STATE && touchview > move_aa && touchview <= move_bb && move_touch_index == -1)
+        	{
+        		//show_help("move");
+        		move_touch_index = sdlev.button.which;
+
+        		int dx = sdlev.button.x - (move_bb.x + move_aa.x) / 2;
+        		int dy = sdlev.button.y - (move_bb.y + move_aa.y) / 2;
+
+        		bool first_event = true;
+
+        		if (dx > move_threshold)
+        		{
+        			move_right_pressed = true;
+
+        			Event *e = first_event ? &ev : new Event();
+        			e->type = EV_KEY;
+        			e->key = get_key_binding("right", 0);
+        			e->mouse_move = m_pos;
+        			e->mouse_button = m_button;
+        			if (!first_event)
+        				Push(e);
+        			first_event = false;
+        		}
+
+        		if (dx < -move_threshold)
+        		{
+        			move_left_pressed = true;
+
+        			Event *e = first_event ? &ev : new Event();
+        			e->type = EV_KEY;
+        			e->key = get_key_binding("left", 0);
+        			e->mouse_move = m_pos;
+        			e->mouse_button = m_button;
+        			if (!first_event)
+        				Push(e);
+        			first_event = false;
+        		}
+
+        		if (dy < -move_threshold)
+        		{
+        			move_up_pressed = true;
+
+        			Event *e = first_event ? &ev : new Event();
+        			e->type = EV_KEY;
+        			e->key = get_key_binding("up", 0);
+        			e->mouse_move = m_pos;
+        			e->mouse_button = m_button;
+        			if (!first_event)
+        				Push(e);
+        			first_event = false;
+        		}
+
+        		if (dy > move_threshold)
+        		{
+        			move_down_pressed = true;
+
+        			Event *e = first_event ? &ev : new Event();
+        			e->type = EV_KEY;
+        			e->key = get_key_binding("down", 0);
+        			e->mouse_move = m_pos;
+        			e->mouse_button = m_button;
+        			if (!first_event)
+        				Push(e);
+        			first_event = false;
+        		}
+        	}
+        	if (wm->m_first == 0 && the_game->state == RUN_STATE && touchview > aim_aa && touchview <= aim_bb && touch_index == -1)
+        	{
+        		//show_help("aim");
+        		touch_index = sdlev.button.which;
+
+        	    int dx = sdlev.button.x - (aim_bb.x + aim_aa.x) / 2;
+        	    int dy = sdlev.button.y - (aim_bb.y + aim_aa.y) / 2;
+        	    int dlen2 = dx * dx + dy * dy;
+
+        	    if (dlen2 < aim_threshold * aim_threshold)
+    			{
+    				dx = 0;
+    				dy = 0;
+    			}
+
+    			ev.type = EV_AIM_X;
+    			ev.key = dx;
+    			ev.mouse_move = m_pos;
+    			ev.mouse_button = m_button;
+
+    			Event *ev2 = new Event();
+    			ev2->type = EV_AIM_Y;
+    			ev2->key = dy;
+    			ev2->mouse_move = m_pos;
+    			ev2->mouse_button = m_button;
+    			Push(ev2);
+
+				Event *ev3 = new Event();
+				ev3->type = EV_KEY;
+				ev3->key = get_key_binding("b2", 0);
+				ev3->mouse_move = m_pos;
+				ev3->mouse_button = m_button;
+				Push(ev3);
+        	}*/
+        	break;
         case 4:        // Mouse wheel goes up...
             ev.key = get_key_binding("b4", 0);
             ev.type = EV_KEY;
@@ -167,6 +690,99 @@ void EventHandler::SysEvent(Event &ev)
             break;
         }
         break;
+#if !defined WEBOS
+	case SDL_JOYBUTTONDOWN:
+	case SDL_JOYBUTTONUP:
+		ev.key = EV_SPURIOUS;
+		if(sdlev.type == SDL_JOYBUTTONDOWN)
+			ev.type = EV_KEY;
+		else
+			ev.type = EV_KEYRELEASE;
+
+		joy_eval_button(sdlev.jbutton.which, sdlev.jbutton.button, ev.key);
+/*		switch (sdlev.jbutton.button)
+		{
+			case 0:		ev.key = get_key_binding("up", 0); break; // dpad up
+			case 1:		ev.key = get_key_binding("down", 0); break; // dpad down
+			case 2:		ev.key = get_key_binding("left", 0); break; // dpad left
+			case 3:		ev.key = get_key_binding("right", 0); break; // dpad right
+			case 4:		ev.key = JK_SPACE; break; // start button
+			case 5:		ev.key = JK_ESC; break; // back buttoninput
+			case 8:		ev.key = get_key_binding("b3", 0); break; // left bumper
+			case 9:		ev.key = get_key_binding("b4", 0); break; // right bumper
+			case 11:	ev.key = JK_ENTER; break; // a button
+			case 12:	ev.key = JK_ESC; break; // b button
+		}*/
+		break;
+    case SDL_JOYAXISMOTION:
+    	joy_eval_axis(sdlev.jaxis.which, sdlev.jaxis.axis, sdlev.jaxis.value, ev.type, ev.key);
+/*		switch (sdlev.jaxis.axis)
+		{
+			case 0: // left analog x
+				if (sdlev.jaxis.value < 16000 && sdlev.jaxis.value > -16000)
+					ev.type = EV_KEYRELEASE;
+				else
+					ev.type = EV_KEY;
+				ev.key=get_key_binding(sdlev.jaxis.value < 0 ? "left" : "right", 0);
+				break;
+			case 1: // left analog y
+				if (sdlev.jaxis.value < 16000 && sdlev.jaxis.value > -16000)
+					ev.type = EV_KEYRELEASE;
+				else
+					ev.type = EV_KEY;
+				ev.key=get_key_binding(sdlev.jaxis.value < 0 ? "up" : "down", 0);
+				break;
+			case 2: // right analog stick x
+				ev.type = EV_AIM_X;
+				if (sdlev.jaxis.value < 3200 && sdlev.jaxis.value > -3200)
+					ev.key = 0;
+				else
+					ev.key = sdlev.jaxis.value;
+				break;
+			case 3: // right analog stick y
+				ev.type = EV_AIM_Y;
+				if (sdlev.jaxis.value < 3200 && sdlev.jaxis.value > -3200)
+					ev.key = 0;
+				else
+					ev.key = sdlev.jaxis.value;
+				break;
+			case 4: // left analog trigger
+				if (sdlev.jaxis.value < 0x7FFF - 3200)
+					ev.type = EV_KEYRELEASE;
+				else
+					ev.type = EV_KEY;
+				ev.key=get_key_binding("b1", 0);
+				break;
+			case 5: // right analog trigger
+				if (sdlev.jaxis.value < 0x7FFF - 3200)
+					ev.type = EV_KEYRELEASE;
+				else
+					ev.type = EV_KEY;
+				ev.key=get_key_binding("b2", 0);
+				break;
+			default:
+				break;
+		}*/
+#endif // !defined WEBOS
+		break;
+#if defined __QNXNTO__
+	case SDL_USEREVENT:
+		if (sdlev.user.code == 0)
+		{
+			ev.type = EV_KEY;
+			ev.key = JK_ESC;
+			/*ev.mouse_move = m_pos;
+			ev.mouse_button = m_button;
+
+			Event *e = new Event();
+			e->type = EV_KEYRELEASE;
+			e->key = JK_ESC;
+			e->mouse_move = m_pos;
+			e->mouse_button = m_button;
+			Push(e);*/
+		}
+		break;
+#endif // __QNXNTO__
     case SDL_KEYDOWN:
     case SDL_KEYUP:
         // Default to EV_SPURIOUS
@@ -304,6 +920,10 @@ void EventHandler::SysEvent(Event &ev)
             }
             break;
         }
+        break;
     }
+
+    m_pos = ev.mouse_move;
+    m_button = ev.mouse_button;
 }
 

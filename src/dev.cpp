@@ -55,11 +55,12 @@ char const *symbol_str(char const *name)
   LSpace *sp = LSpace::Current;
   LSpace::Current = &LSpace::Perm;
 
-  char prog[50];
+  const size_t progsize = 50;
+  char prog[progsize];
   char const *cs=prog;
-  strcpy(prog,"(setq section 'game_section)\n");
+  strncpy(prog,"(setq section 'game_section)\n", progsize-1); prog[progsize-1] = 0;
   LObject::Compile(cs)->Eval();
-  strcpy(prog,"(load \"lisp/english.lsp\")\n");
+  strncpy(prog,"(load \"lisp/english.lsp\")\n", progsize-1); prog[progsize-1] = 0;
   cs=prog;
   if (!LObject::Compile(cs)->Eval())
   {
@@ -97,7 +98,7 @@ image *small_render=NULL;
 ivec2 dlast;
 int scale_mult,scale_div;
 int last_created_type=-1;
-char level_file[100]="levels/level00.spe";
+char level_file[levelfilesize]="levels/level00.spe";
 
 
 class cached_image : public visual_object
@@ -148,8 +149,9 @@ class amb_cont : public scroller
   virtual void scroll_event(int newx, image *screen)
   {
     screen->Bar(m_pos, m_pos + ivec2(l - 1, h - 1), wm->dark_color());
-    char st[100];
-    sprintf(st,"%d",newx);
+    const size_t stsize = 100;
+    char st[stsize];
+    snprintf(st,stsize,"%d",newx);
     wm->font()->PutString(screen, m_pos + ivec2(30, 1), st, wm->bright_color());
     if (player_list)
       player_list->ambient=newx;
@@ -173,6 +175,8 @@ int confirm_quit()
               new button(38, wm->font()->Size().y + 4, ID_CANCEL, cancel_image,
               new info_field(2, 2, ID_NULL, symbol_str("sure?"), NULL))),
               symbol_str("quit_title"));
+	
+	quitw->set_orientation(JWINDOW_ORIENTATION_HORIZONTAL);
 
     wm->grab_focus(quitw);
     int fin = 0, quit = 0;
@@ -218,8 +222,9 @@ static void show_object_number (game_object *who)
       total++;
     if (c==who) number=total;
   }
-  char msg[100];
-  sprintf(msg,"%s : %d of %d",object_names[who->otype],number,total);
+  const size_t msgsize = 100;
+  char msg[msgsize];
+  snprintf(msg,msgsize,"%s : %d of %d",object_names[who->otype],number,total);
 }
 
 void dev_controll::search_backward()
@@ -259,8 +264,9 @@ void dev_controll::search_forward()
         type=i;
     if (type==-1)
     {
-      char msg[60];
-      sprintf(msg,"Object type '%s' does not existss!\n",name);
+      const size_t msgsize = 60;
+      char msg[msgsize];
+      snprintf(msg,msgsize,"Object type '%s' does not existss!\n",name);
       the_game->show_help(msg);
       the_game->need_refresh();
     } else
@@ -955,9 +961,10 @@ void dev_controll::load_stuff()
 {
   if (dev & EDIT_MODE)
   {
-    char prog[100];
+    const size_t progsize = 100;
+    char prog[progsize];
     char const *cs;
-    strcpy(prog,"(compile-file \"edit.lsp\")");
+    strncpy(prog,"(compile-file \"edit.lsp\")", progsize-1); prog[progsize-1] = 0;
     cs=prog;
     LObject *p = LObject::Compile(cs);
     l_user_stack.push(p);
@@ -971,7 +978,8 @@ void dev_controll::load_stuff()
 
 void dev_controll::do_command(char const *command, Event &ev)
 {
-  char fword[50];
+  const size_t fwordsize = 50;
+  char fword[fwordsize];
   char const *st;
   int l,h,x,y,i;
   if (command[0]=='(')            // is this a lisp command?
@@ -979,8 +987,10 @@ void dev_controll::do_command(char const *command, Event &ev)
     LObject::Compile(command)->Eval();
     return ;
   }
-
-  sscanf(command,"%s",fword);
+  const size_t formatsize = 20;
+  char format[formatsize];
+  snprintf(format, formatsize, "%%%ds", fwordsize); // "%50s"
+  sscanf(command,format,fword);
   for (st=command; *st && *st!=' '; st++);
   if (*st) st++;
   if (!strcmp(fword,"active"))
@@ -1024,8 +1034,9 @@ void dev_controll::do_command(char const *command, Event &ev)
       int32_t *w=(int32_t *)malloc(total_weapons*sizeof(int32_t));
       memcpy(w,player_list->weapons,total_weapons*sizeof(int32_t));
 
-      char tmp[100];
-      strcpy(tmp,current_level->name());
+      const size_t tmpsize = 100;
+      char tmp[tmpsize];
+      strncpy(tmp,current_level->name(),tmpsize-1); tmp[tmpsize-1] = 0;
       the_game->load_level(tmp);
       current_level->unactivate_all();
 
@@ -1091,7 +1102,7 @@ void dev_controll::do_command(char const *command, Event &ev)
   }
   if (!strcmp(fword,"set_first_level"))
   {
-    strcpy(level_file,st);
+    strncpy(level_file,st,levelfilesize-1); level_file[levelfilesize-1] = 0;
     dprintf("first level will be '%s'\n",level_file);
   }
 
@@ -1172,7 +1183,7 @@ void dev_controll::do_command(char const *command, Event &ev)
       last_created_type=t;
     } else
     {
-      sprintf(fword,"No such object type : %s\n",oname);
+      snprintf(fword,fwordsize,"No such object type : %s\n",oname);
       the_game->show_help(fword);
     }
   }
@@ -1372,8 +1383,9 @@ void dev_controll::make_ai_window(game_object *o)
     ifield *first=NULL,*last=NULL;
     for (i=0; i<figures[o->otype]->total_fields; i++)
     {
-      char tmp[200];
-      strcpy(tmp,figures[o->otype]->fields[i]->descript_name);
+      const size_t tmpsize = 200;
+      char tmp[tmpsize];
+      strncpy(tmp,figures[o->otype]->fields[i]->descript_name,tmpsize-1); tmp[tmpsize-1] = 0;
       for (int j=maxl-strlen(figures[o->otype]->fields[i]->descript_name); j; j--)
         strcat(tmp," ");
       int er;
@@ -1637,8 +1649,9 @@ void dev_controll::handle_event(Event &ev)
     write_PCX(main_screen,pal,"scrnshot.pcx");
   else if (ev.type==EV_KEY && ev.key==JK_F3)
   {
-    char name[100];
-    sprintf(name,"shot%04d.pcx",screen_shot_on++);
+    const size_t namesize = 256;
+    char name[namesize];
+    snprintf(name,namesize,"shot%04d.pcx",screen_shot_on++);
     write_PCX(main_screen,pal,name);
   } else if (ev.type==EV_KEY && ev.key==JK_F5)
   {
@@ -1682,7 +1695,7 @@ void dev_controll::handle_event(Event &ev)
       edit_object->y = snap_y(pos.y);
       the_game->need_refresh();
     }
-    else if (ev.mouse_button==1 && ev.window==NULL)
+    else if (ev.mouse_button==LEFT_BUTTON && ev.window==NULL)
     {
       state=DEV_MOUSE_RELEASE;
       selected_object=edit_object=NULL;
@@ -1778,7 +1791,7 @@ void dev_controll::handle_event(Event &ev)
     }
       }
 
-      if ((ev.mouse_button==1 && ev.window==NULL) || !edit_light)
+      if ((ev.mouse_button==LEFT_BUTTON && ev.window==NULL) || !edit_light)
         state=DEV_MOUSE_RELEASE;
     } break;
 
@@ -1850,14 +1863,14 @@ void dev_controll::handle_event(Event &ev)
       if (edit_mode==ID_DMODE_DRAW)
       {
         // FIXME: there is a bug here, the two if conditionals are the same
-        if (ev.mouse_button==1 && !selected_object && !selected_light)
+        if (ev.mouse_button==LEFT_BUTTON && !selected_object && !selected_light)
         {
           ivec2 tile = the_game->GetFgTile(last_demo_mpos);
           if (tile.x>=0 && tile.y>=0 && tile.x<current_level->foreground_width() &&
           tile.y<current_level->foreground_height())
           current_level->PutFg(tile, raise_all ? make_above_tile(cur_fg) : cur_fg);
           the_game->need_refresh();
-        } else if (ev.mouse_button==1 && !selected_object && !selected_light)
+        } else if (ev.mouse_button==LEFT_BUTTON && !selected_object && !selected_light)
         {
           ivec2 tile = the_game->GetBgTile(last_demo_mpos);
           if (tile.x>=0 && tile.y>=0 && tile.x<current_level->background_width() &&
@@ -1940,14 +1953,14 @@ void dev_controll::handle_event(Event &ev)
       {
         if (dlast.x>=0 && dlast.y>=0 && edit_mode==ID_DMODE_DRAW)
         {
-          if ((dev & DRAW_FG_LAYER) && ev.mouse_button==1)
+          if ((dev & DRAW_FG_LAYER) && ev.mouse_button==LEFT_BUTTON)
           {
         ivec2 tile = the_game->GetFgTile(last_demo_mpos);
         if (tile.x>=0 && tile.y>=0 && tile.x<current_level->foreground_width() &&
             tile.y<current_level->foreground_height())
         the_game->PutFg(tile, raise_all ? make_above_tile(cur_fg) : cur_fg);
           }
-          if ((dev & DRAW_BG_LAYER) && ev.mouse_button==2)
+          if ((dev & DRAW_BG_LAYER) && ev.mouse_button==RIGHT_BUTTON)
           {
         ivec2 tile = the_game->GetBgTile(last_demo_mpos);
         if (tile.x>=0 && tile.y>=0 && tile.x<current_level->background_width() &&
@@ -1958,7 +1971,7 @@ void dev_controll::handle_event(Event &ev)
       }
     }
       }
-    }
+    } break;
     default:
       break;
   }
@@ -2019,8 +2032,9 @@ void dev_controll::handle_event(Event &ev)
     } break;
     case ID_LEVEL_LOAD_OK :
     {
-      char cmd[100];
-      sprintf(cmd,"load %s",mess_win->read(ID_MESS_STR1));
+      const size_t cmdsize = 100;
+      char cmd[cmdsize];
+      snprintf(cmd,cmdsize,"load %s",mess_win->read(ID_MESS_STR1));
       dev_cont->do_command(cmd,ev);
       wm->Push(new Event(ID_CANCEL,NULL));        // close window
     } break;
@@ -2035,8 +2049,9 @@ void dev_controll::handle_event(Event &ev)
       {
         if (current_level->save(current_level->name(),0))
         {
-          char msg[100];
-          sprintf(msg,symbol_str("saved_level"),current_level->name());
+          const size_t msgsize = 100;
+          char msg[msgsize];
+          snprintf(msg,msgsize,symbol_str("saved_level"),current_level->name());
           the_game->show_help(msg);
           the_game->need_refresh();
         }
@@ -2279,8 +2294,9 @@ void dev_controll::handle_event(Event &ev)
     } break;
     case ID_ADD_PALETTE_OK :
     {
-      char name[70];
-      sprintf(name,"(add_palette \"%s\" %d %d)",mess_win->read(ID_MESS_STR3),
+      const size_t namesize = 70;
+      char name[namesize];
+      snprintf(name,namesize,"(add_palette \"%s\" %d %d)",mess_win->read(ID_MESS_STR3),
           atoi(mess_win->read(ID_MESS_STR1)),
           atoi(mess_win->read(ID_MESS_STR2)));
       char const *s=name;
@@ -2536,8 +2552,9 @@ void dev_controll::handle_event(Event &ev)
 
     case DEV_COMMAND_OK :
     {
-      char cmd[100];
-      strcpy(cmd,commandw->inm->get(DEV_COMMAND)->read());
+      const size_t cmdsize = 100;
+      char cmd[cmdsize];
+      strncpy(cmd,commandw->inm->get(DEV_COMMAND)->read(),cmdsize-1); cmd[cmdsize-1] = 0;
       prop->setd("commandw x",commandw->m_pos.x);
       prop->setd("commandw y",commandw->m_pos.y);
       wm->close_window(commandw);
@@ -2575,8 +2592,9 @@ void dev_controll::handle_event(Event &ev)
     case DEV_CREATE :
     {
       int val=get_omenu_item(((pick_list *)ev.message.data)->get_selection());
-      char cmd[100];
-      sprintf(cmd,"create %s",object_names[val]);
+      const size_t cmdsize = 100;
+      char cmd[cmdsize];
+      snprintf(cmd,cmdsize,"create %s",object_names[val]);
       do_command(cmd,ev);
       state=DEV_CREATE_OBJECT;
       dev|=(EDIT_MODE | DRAW_PEOPLE_LAYER);
@@ -2750,8 +2768,9 @@ void dev_controll::handle_event(Event &ev)
         if (last_created_type>=0)
         {
           int val=last_created_type;
-          char cmd[100];
-          sprintf(cmd,"create %s",object_names[val]);
+          const size_t cmdsize = 100;
+          char cmd[cmdsize];
+          snprintf(cmd,cmdsize,"create %s",object_names[val]);
           do_command(cmd,ev);
           state=DEV_CREATE_OBJECT;
           dev|=(EDIT_MODE | DRAW_PEOPLE_LAYER);
@@ -2809,7 +2828,8 @@ void dev_controll::handle_event(Event &ev)
       case 'w' :
       {
         ivec2 pos = the_game->MouseToGame(dlast);
-        char msg[100]; sprintf(msg, symbol_str("mouse_at"), pos.x, pos.y);
+        const size_t msgsize = 100;
+        char msg[msgsize]; snprintf(msg, msgsize, symbol_str("mouse_at"), pos.x, pos.y);
         the_game->show_help(msg);
         the_game->need_refresh();
       } break;
@@ -2879,7 +2899,7 @@ void dev_controll::handle_event(Event &ev)
 
     }
       }
-    }
+    } break;
   }
 
 
@@ -3019,7 +3039,7 @@ void pal_win::handle_event(Event &ev)
     {
       case EV_MOUSE_BUTTON :
       {
-        if (ev.mouse_button==1)
+        if (ev.mouse_button==LEFT_BUTTON)
     {
       int selx=(last_demo_mpos.x-me->m_pos.x-me->x1())/(the_game->ftile_width()/scale),
           sely=(last_demo_mpos.y-me->m_pos.y-me->y1())/(the_game->ftile_height()/scale);
@@ -3030,7 +3050,7 @@ void pal_win::handle_event(Event &ev)
           ((tile_picker *)dev_cont->forew->
            read(DEV_FG_PICKER))->recenter(dev_cont->forew->m_surf);
       }
-    } else if (ev.mouse_button==2)
+    } else if (ev.mouse_button==RIGHT_BUTTON)
     {
       if (palettes_locked)
         the_game->show_help(symbol_str("pal_lock"));

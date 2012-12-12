@@ -24,6 +24,7 @@
 #include "common.h"
 
 #include "sdlport/joy.h"
+#include "sdlport/setup.h"
 
 #include "dev.h"
 #include "game.h"
@@ -58,11 +59,10 @@
 #include "chat.h"
 #include "demo.h"
 #include "netcfg.h"
-
-#define SHIFT_RIGHT_DEFAULT 0
-#define SHIFT_DOWN_DEFAULT 30
+#include "director.h"
 
 extern CrcManager *net_crcs;
+extern flags_struct flags;
 
 Game *the_game = NULL;
 WindowManager *wm = NULL;
@@ -79,7 +79,9 @@ extern palette *old_pal;
 char **start_argv;
 int start_argc;
 int has_joystick = 0;
-char req_name[100];
+int has_multitouch = 0;
+static const size_t reqnamesize = 100;
+char req_name[reqnamesize];
 
 extern uint8_t chatting_enabled;
 
@@ -91,12 +93,12 @@ tcpip_protocol tcpip;
 
 FILE *open_FILE(char const *filename, char const *mode)
 {
-    /* FIXME: potential buffer overflow here */
-    char tmp_name[200];
+	const size_t tmp_namesize = 255;
+    char tmp_name[tmp_namesize];
     if(get_filename_prefix() && filename[0] != '/')
-        sprintf(tmp_name, "%s %s", get_filename_prefix(), filename);
+        snprintf(tmp_name, tmp_namesize, "%s %s", get_filename_prefix(), filename);
     else
-        strcpy(tmp_name, filename);
+        strncpy(tmp_name, filename, tmp_namesize);
     return fopen(tmp_name, mode);
 }
 
@@ -357,8 +359,35 @@ int window_state(int state)
     return 1;
 }
 
+void Game::reset_keymap()
+{
+	memset(keymap,0,sizeof(keymap));
+	if (wm)
+		wm->reset_keymap();
+}
+
+const char * state_name(int s)
+{
+	switch (s)
+	{
+	case RUN_STATE: return "RUN_STATE";
+	case PAUSE_STATE: return "PAUSE_STATE";
+	case HELP_STATE: return "HELP_STATE";
+	case INTRO_START_STATE: return "INTRO_START_STATE";
+	case INTRO_MORPH_STATE: return "INTRO_MORPH_STATE";
+	case JOY_CALB_STATE: return "JOY_CALB_STATE";
+	case MENU_STATE: return "MENU_STATE";
+	case SCENE_STATE: return "SCENE_STATE";
+	case START_STATE: return "START_STATE";
+	default: return "<UNKNOWN STATE>";
+	}
+}
+
 void Game::set_state(int new_state)
 {
+	//printf("set_state %s -> %s\n", state_name(state), state_name(new_state));
+	//fflush(stdout);
+
     int d = 0;
     reset_keymap(); // we think all the keys are up right now
 
@@ -434,7 +463,7 @@ void Game::joy_calb(Event &ev)
     if(ev.type == EV_SPURIOUS) // spurious means we should update our status
     {
         int b1, b2, b3 = 0, x, y;
-        joy_status(b1, b2, b2, x, y);
+        joy_status(b1, b2, b3, x, y); // THOMASR
         int but = b1|b2|b3;
         if(x > 0) x = 1; else if(x < 0) x = -1;
         if(y > 0) y = 1; else if(y < 0) y = -1;
@@ -473,7 +502,7 @@ void Game::menu_select(Event &ev)
 
 void Game::show_help(char const *st)
 {
-    strcpy(help_text, st);
+    strncpy(help_text, st, helptextsize-1); help_text[helptextsize-1] = 0;
     help_text_frames = 0;
     refresh = 1;
 }
@@ -668,8 +697,8 @@ void Game::draw_map(view *v, int interpolate)
   {
     int c = v->draw_solid;
     main_screen->Lock();
-    for(int y = v->m_aa.y; y <= v->m_bb.y; y++)
-      memset(main_screen->scan_line(y)+v->m_aa.x, c, v->m_bb.x - v->m_aa.x + 1);
+    for(int y = v->m_aa.y; y < v->m_bb.y; y++)
+      memset(main_screen->scan_line(y)+v->m_aa.x, c, v->m_bb.x - v->m_aa.x);
     main_screen->Unlock();
     v->draw_solid = -1;
     return;
@@ -901,7 +930,7 @@ void Game::draw_map(view *v, int interpolate)
 
     draw_panims(v);
 
-    if(dev & DRAW_FG_LAYER && rescan)
+    if((dev & DRAW_FG_LAYER) && rescan)
     {
       for(y = y1, draw_y = yo; y <= y2; y++, draw_y += yinc)
       {
@@ -1070,7 +1099,7 @@ int Game::in_area(Event &ev, int x1, int y1, int x2, int y2)
 
 void Game::request_level_load(char *name)
 {
-  strcpy(req_name, name);
+  strncpy(req_name, name, reqnamesize-1); req_name[reqnamesize-1] = 0;
 }
 
 extern int start_doubled;
@@ -1125,8 +1154,6 @@ void fade_out(int steps)
     Fade<0>(NULL, steps);
 }
 
-int text_draw(int y, int x1, int y1, int x2, int y2, char const *buf, JCFont *font, uint8_t *cmap, char color);
-
 void do_title()
 {
     if(cdc_logo == -1)
@@ -1174,10 +1201,11 @@ void do_title()
         image *gray = new image(fp, sd.find("gray_pict"));
         image *smoke[5];
 
-        char nm[20];
+        const size_t nmsize = 20;
+        char nm[nmsize];
         for (int i = 0; i < 5; i++)
         {
-            sprintf(nm, "smoke%04d.pcx", i + 1);
+            snprintf(nm, nmsize, "smoke%04d.pcx", i + 1);
             smoke[i] = new image(fp, sd.find(nm));
         }
 
@@ -1265,7 +1293,7 @@ Game::Game(int argc, char **argv)
 
 
   for(i = 1; i < argc; i++)
-    if(!strcmp(argv[i], "-no_delay"))
+    if(!strcmp(argv[i], "-nodelay"))
     {
       no_delay = 1;
       dprintf("Frame delay off (-nodelay)\n");
@@ -1275,6 +1303,8 @@ Game::Game(int argc, char **argv)
   image_init();
   zoom = 15;
   no_delay = 0;
+  has_joystick = false;
+  has_multitouch = false;
 
   if(get_option("-use_joy"))
   {
@@ -1284,6 +1314,13 @@ Game::Game(int argc, char **argv)
     else dprintf("not detected\n");
   }
   else has_joystick = 0;
+
+  if (flags.use_multitouch)
+  {
+    has_multitouch = true;
+    dprintf("Using multi-touch\n");
+  }
+  else has_multitouch = false;
 
     // Clean up that old crap
     char *fastpath = (char *)malloc(strlen(get_save_filename_prefix()) + 13);
@@ -1413,13 +1450,14 @@ Game::Game(int argc, char **argv)
 }
 
 time_marker *led_last_time = NULL;
-static float avg_ms = 1000.0f / 15, possible_ms = 1000.0f / 15;
+const int framerate = 15; // THOMASR
+static float avg_ms = 1000.0f / framerate, possible_ms = 1000.0f / framerate;
 
 void Game::toggle_delay()
 {
     no_delay = !no_delay;
     show_help(symbol_str(no_delay ? "delay_off" : "delay_on"));
-    avg_ms = possible_ms = 1000.0f / 15;
+    avg_ms = possible_ms = 1000.0f / framerate;
 }
 
 void Game::show_time()
@@ -1514,7 +1552,7 @@ int Game::calc_speed()
     avg_ms = 0.9f * avg_ms + 0.1f * deltams;
     possible_ms = 0.9f * possible_ms + 0.1f * deltams;
 
-    if (avg_ms < 1000.0f / 14)
+    if (avg_ms < 1000.0f / (framerate - 1)) // THOMASR
         massive_frame_panic = Max(0, Min(20, massive_frame_panic - 1));
 
     int ret = 0;
@@ -1525,17 +1563,17 @@ int Game::calc_speed()
         // that we don't exceed 30FPS in edit mode and hog the CPU.
         frame_timer.WaitMs(33);
     }
-    else if (avg_ms < 1000.0f / 15 && need_delay)
+    else if (avg_ms < 1000.0f / framerate && need_delay) // THOMASR
     {
         frame_panic = 0;
         if (!no_delay)
         {
-            frame_timer.WaitMs(1000.0f / 15);
+            frame_timer.WaitMs(1000.0f / framerate); // THOMASR
             avg_ms -= 0.1f * deltams;
-            avg_ms += 0.1f * 1000.0f / 15;
+            avg_ms += 0.1f * 1000.0f / framerate; // THOMASR
         }
     }
-    else if (avg_ms > 1000.0f / 14)
+    else if (avg_ms > 1000.0f / (framerate - 1)) // THOMASR
     {
         if(avg_ms > 1000.0f / 10)
             massive_frame_panic++;
@@ -1643,7 +1681,7 @@ void Game::get_input()
                                     "Joystick");
                             set_state(JOY_CALB_STATE);
                         }
-                    }
+                    } break;
                     case TOP_MENU:
                     {
                         menu_select(ev);
@@ -1676,7 +1714,7 @@ void Game::get_input()
                 } break;
                 case PAUSE_STATE:
                 {
-                    if(ev.type == EV_KEY && (ev.key == JK_SPACE || ev.key == JK_ENTER))
+                    if(ev.type == EV_KEY && (ev.key == JK_SPACE || ev.key == JK_ENTER || ev.key == 'p'))
                     {
                         set_state(RUN_STATE);
                     }
@@ -1695,7 +1733,7 @@ void Game::get_input()
                                     {
                                         if(dev & MAP_MODE)
                                             dev -= MAP_MODE;
-                                        else if((player_list && player_list->next) || dev & EDIT_MODE)
+                                        else if((player_list && player_list->next) || (dev & EDIT_MODE))
                                             dev |= MAP_MODE;
 
                                         if(!(dev & MAP_MODE))
@@ -1914,8 +1952,8 @@ void Game::step()
     {
       if(key_down(JK_ESC))
       {
-    set_state(MENU_STATE);
-    set_key_down(JK_ESC, 0);
+        set_state(MENU_STATE);
+        set_key_down(JK_ESC, 0);
       }
       ambient_ramp = 0;
       view *v;
@@ -1925,14 +1963,29 @@ void Game::step()
       cache.prof_poll_start();
       current_level->tick();
       sbar.step();
-    } else
+    }
+    else
+    {
       dev_scroll();
-  } else if(state == JOY_CALB_STATE)
+    }
+  }
+  else if(state == PAUSE_STATE)
+  {
+    if(key_down(JK_ESC))
+    {
+      set_state(MENU_STATE);
+      set_key_down(JK_ESC, 0);
+    }
+  }
+  else if(state == JOY_CALB_STATE)
   {
     Event ev;
     joy_calb(ev);
-  } else if(state == MENU_STATE)
+  }
+  else if(state == MENU_STATE)
+  {
     main_menu();
+  }
 
   if((key_down('x') || key_down(JK_F4))
       && (key_down(JK_ALT_L) || key_down(JK_ALT_R))

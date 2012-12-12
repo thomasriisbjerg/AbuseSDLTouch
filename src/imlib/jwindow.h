@@ -28,6 +28,14 @@ extern int frame_right();
 
 void set_frame_size(int x);
 
+enum JwindowOrientation {
+	JWINDOW_ORIENTATION_NONE,
+	JWINDOW_ORIENTATION_VERTICAL,
+	JWINDOW_ORIENTATION_HORIZONTAL,
+};
+
+class Jwindow;
+
 class InputManager
 {
     friend class Jwindow;
@@ -49,6 +57,8 @@ public:
     void allow_no_selections();
 
 private:
+	int get_prev_key(Jwindow *window);
+	int get_next_key(Jwindow *window);
     image *m_surf;
     ifield *m_first, *m_active, *m_grab;
     Jwindow *m_cur, *m_owner;
@@ -96,7 +106,7 @@ public:
 
     Jwindow(char const *name = NULL);
     Jwindow(ivec2 pos, ivec2 size, ifield *f, char const *name = NULL);
-    ~Jwindow();
+    virtual ~Jwindow();
 
     virtual void redraw();
     void Resize(ivec2 size);
@@ -116,6 +126,8 @@ public:
     void clip_out() { m_surf->SetClip(ivec2(0), m_size); }
     char *read(int id) { return inm->get(id)->read(); }
     void local_close();
+	JwindowOrientation get_orientation() { return window_orientation; }
+	void set_orientation(JwindowOrientation orientation) { window_orientation = orientation; }
 
     static int left_border();
     static int right_border();
@@ -128,6 +140,7 @@ public:
 protected:
     Jwindow *owner;
     int _x1, _y1, _x2, _y2;
+	JwindowOrientation window_orientation;
 
 private:
     char *_name;

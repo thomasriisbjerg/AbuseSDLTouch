@@ -25,7 +25,8 @@ class file_picker : public spicker
 {
   char **f,**d;
   int tf,td,wid,sid;
-  char cd[300];
+  static const size_t cdsize = 256;
+  char cd[cdsize];
   public:
   file_picker(int X, int Y, int ID, int Rows, ifield *Next);
   virtual int total() { return tf+td; }
@@ -59,11 +60,14 @@ void file_picker::note_selection(image *screen, InputManager *inm, int x)
       area(x1,y1,x2,y2);
       screen->Bar(ivec2(x1, y1), ivec2(x2, y2), wm->medium_color());
 
-      char st[200],curdir[200];
-      sprintf(st,"%s/%s",cd,d[x]);
-      getcwd(curdir,200);
+      const size_t stsize = 256;
+      char st[stsize];
+      const size_t curdirsize = 256;
+      char curdir[curdirsize];
+      snprintf(st,stsize,"%s/%s",cd,d[x]);
+      getcwd(curdir,curdirsize);
       chdir(st);
-      getcwd(cd,200);
+      getcwd(cd,cdsize);
       chdir(curdir);
 
       free_up();
@@ -84,7 +88,8 @@ void file_picker::note_selection(image *screen, InputManager *inm, int x)
 #endif
   } else
   {
-    char nm[200];
+    const size_t nmsize = 256;
+    char nm[nmsize];
     sprintf(nm,"%s/%s",cd,f[x-td]);
     text_field *link=(text_field *)inm->get(sid);
     link->change_data(nm,strlen(nm),1,screen);
@@ -99,11 +104,12 @@ void file_picker::draw_item(image *screen, int x, int y, int num, int active)
                     ivec2(x + item_width() - 1, y + item_height() - 1),
                     wm->black());
 
-    char st[100], *dest;
+    const size_t stsize = 256;
+    char st[stsize], *dest;
     if (num >= td)
         dest = f[num - td];
     else
-        sprintf(dest = st, "<%s>", d[num]);
+        snprintf(dest = st, stsize, "<%s>", d[num]);
 
     wm->font()->PutString(screen, ivec2(x, y), dest, wm->bright_color());
 }

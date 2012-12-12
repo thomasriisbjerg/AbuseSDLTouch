@@ -135,6 +135,16 @@ inline int angle_diff(int a1, int a2)
   return 0;
 }
 
+inline int angle_diff2(int a1, int a2)
+{
+	int diff = a1 - a2;
+	while (diff < -180)
+		diff += 360;
+	while (diff > 180)
+		diff -= 360;
+	return diff;
+}
+
 void *top_ai()
 {
   game_object *o=current_object;
@@ -155,11 +165,41 @@ void *top_ai()
     signed char *fire_off=o->otype==S_DFRIS_TOP ? large_fire_off :
                                     (o->otype==S_ROCKET_TOP ? large_fire_off :
                      (o->otype==S_BFG_TOP ? large_fire_off : small_fire_off));
-    signed char *f=fire_off,*fb=NULL;
+    signed char *f=fire_off,*fb=f; // THOMASR
     int best_diff=200,best_num=0;
     int iy=f[1],ix=f[6*2];
 
-    int best_angle=lisp_atan2(q->y-iy-v->pointer_y,v->pointer_x-q->x-ix);
+    extern int has_joystick;
+    extern int has_multitouch;
+    //extern void show_help(const char *msg, ...);
+    int best_angle;
+    if (v->aim_x || v->aim_y)
+    {
+      best_angle=lisp_atan2(-v->aim_y,v->aim_x);
+      //show_help("best angle %i aim (%i, %i)", best_angle, v->aim_x, v->aim_y);
+    }
+    // if 1 second since last aim input...
+    else if (has_joystick || has_multitouch)
+    {
+      int current_angle = o->lvars[point_angle];
+      int desired_angle = q->direction < 0 ? 180 : 0;
+      int diff = angle_diff2(desired_angle, current_angle);
+      int adiff = abs(diff);
+      int angle_speed = adiff < 60 ? 15 : adiff < 120 ? 30 : adiff < 180 ? 60 : 180;
+      diff = diff < -angle_speed && diff > -170 ? -angle_speed : diff;
+      diff = diff > angle_speed && diff < 170 ? angle_speed : diff;
+      best_angle = current_angle + diff;
+      //show_help("best angle %i current %i desired %i diff %i direction %i", best_angle, current_angle, desired_angle, diff, q->direction);
+    }
+    else
+    {
+      best_angle=lisp_atan2(q->y-iy-v->pointer_y,v->pointer_x-q->x-ix);
+      //show_help("best angle %i aim (%i, %i) pointer", best_angle, v->aim_x, v->aim_y);
+    }
+
+    extern int _best_angle; // this is a nasty hack to get around me not knowing how to access the cop's lvars[point_angle] from sdlport/video.cpp
+    _best_angle = best_angle;
+
     for (i=0; i<24; i++,f+=2)             // check all the angles to see which would best fit animation wise
     {
       int this_angle=lisp_atan2(f[1]-iy,f[0]-ix);
@@ -172,13 +212,18 @@ void *top_ai()
       }
     }
 
-
-    // if the pointer is too close to the player go with the angle shown, not the angle through the pointer
-    if (abs(q->y-fb[1]-v->pointer_y)<45 && abs(v->pointer_x-q->x+fb[0])<40)
-      o->lvars[point_angle]=lisp_atan2(fb[1]-iy,fb[0]-ix);
+    if (v->aim_x || v->aim_y || has_joystick || has_multitouch)
+    {
+      o->lvars[point_angle]=best_angle; // THOMASR
+    }
     else
-      o->lvars[point_angle]=lisp_atan2(q->y-fb[1]-v->pointer_y,v->pointer_x-(q->x+fb[0]));
-
+    {
+      // if the pointer is too close to the player go with the angle shown, not the angle through the pointer
+      if (abs(q->y-fb[1]-v->pointer_y)<45 && abs(v->pointer_x-q->x+fb[0])<40)
+        o->lvars[point_angle]=lisp_atan2(fb[1]-iy,fb[0]-ix);
+      else
+        o->lvars[point_angle]=lisp_atan2(q->y-fb[1]-v->pointer_y,v->pointer_x-(q->x+fb[0]));
+    }
 
     if (q->direction<0)
           q->x-=4;
@@ -673,7 +718,7 @@ void *cop_mover(int xm, int ym, int but)
       }
     } else if (o->aistate()==3)
     {
-      if (!o->controller() || o->controller()->key_down(JK_SPACE))
+      if (!o->controller() || o->controller()->key_down(JK_SPACE) || o->controller()->key_down(JK_ENTER)) // THOMASR
       {
         // call the user function to reset the player
     ((LSymbol *)l_restart_player)->EvalFunction(NULL);
@@ -1023,15 +1068,16 @@ void *score_draw()
     qsort(sorted_players,tp,sizeof(view *),compare_players);
 
     ivec2 pos = local->m_aa;
-    char msg[100];
+    const size_t msgsize = 100;
+    char msg[msgsize];
 
     int i;
     for (i=0; i<tp; i++)
     {
       int color=lnumber_value(((LArray *)((LSymbol *)l_player_text_color)->GetValue())->Get(sorted_players[i]->get_tint()));
-      sprintf(msg,"%3ld %s",(long)sorted_players[i]->kills,sorted_players[i]->name);
+      snprintf(msg,msgsize,"%3ld %s",(long)sorted_players[i]->kills,sorted_players[i]->name);
       if (sorted_players[i]==local)
-        strcat(msg," <<");
+        strncat(msg," <<",msgsize);
 
       fnt->PutString(main_screen, pos, msg, color);
       pos.y += fnt->Size().y;
@@ -1076,10 +1122,11 @@ void *show_kills()
     char max_name[NAME_LEN];
     strncpy(max_name,v->name,NAME_LEN-1);
     max_name[NAME_LEN-1]=0;
-    char msg[100];
+    const size_t msgsize = 100;
+    char msg[msgsize];
 
 
-    sprintf(msg,"%-17s %3ld  %3ld",max_name,(long)v->kills,(long)(v->tkills+v->kills));
+    snprintf(msg,msgsize,"%-17s %3ld  %3ld",max_name,(long)v->kills,(long)(v->tkills+v->kills));
     fnt->PutString(main_screen, ivec2(x, y), msg, color);
 
     y += fnt->Size().y;

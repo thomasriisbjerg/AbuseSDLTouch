@@ -36,17 +36,18 @@ struct player_keys
 
 static player_keys *key_map = NULL;
 
-static int binding_for_player( int player )
+static int binding_for_player(int player)
 {
-    char tmp[40];
-    sprintf( tmp, "player%d", player );
+    const size_t tmpsize = 40;
+    char tmp[tmpsize];
+    snprintf(tmp, tmpsize, "player%d", player);
     LSymbol *f = LSymbol::Find(tmp);
-    if( !NILP(f) && DEFINEDP(f->GetValue()))
+    if (!NILP(f) && DEFINEDP(f->GetValue()))
     {
         void *what = f->GetValue();
-        if(what == LSymbol::FindOrCreate("keyboard"))
+        if (what == LSymbol::FindOrCreate("keyboard"))
             return 1;
-        else if(what == LSymbol::FindOrCreate("joystick"))
+        else if (what == LSymbol::FindOrCreate("joystick"))
             return 2;
     }
     return 0;
@@ -55,8 +56,10 @@ static int binding_for_player( int player )
 /*
 int get_key_binding(char const *dir, int i)
 {
-    char tmp[100], kn[50];
-    sprintf( tmp, "player%d-%s", i, dir );
+    const size_t tmpsize = 100;
+    const size_t knsize = 50;
+    char tmp[tmpsize], kn[50];
+    snprintf( tmp, tmpsize, "player%d-%s", i, dir );
     Cell *f = find_symbol( tmp );
     if( NILP(f) || !DEFINEDP( symbol_value( f ) ) )
         return 0;
@@ -65,7 +68,7 @@ int get_key_binding(char const *dir, int i)
     if( item_type( k ) != L_SYMBOL )
         return 0;
 
-    strcpy( tmp, lstring_value( symbol_name( k ) ) );
+    strncpy( tmp, lstring_value( symbol_name( k ) ), tmpsize );
 
     for( char *c = tmp; *c; c++ )
     {
@@ -86,7 +89,7 @@ int get_key_binding(char const *dir, int i)
     }
     return 0;
 }
-*/
+ */
 
 /*
 void get_key_bindings()
@@ -121,14 +124,14 @@ void get_key_bindings()
     {
         key_map = NULL;
     }
-}*/
+ }*/
 
 // AK
 void get_key_bindings()
 {
-    if( key_map )
+    if (key_map)
     {
-        free( key_map );
+        free(key_map);
     }
     key_map = NULL;
 
@@ -159,12 +162,11 @@ void get_key_bindings()
     }
 }
 
-
 #define is_pressed(x) the_game->key_down(x)
 
 void get_movement(int player, int &x, int &y, int &b1, int &b2, int &b3, int &b4)
 {
-    if( player < key_players )
+    if (player < key_players)
     {
 /*        if( key_map[player].joy )
         {
@@ -178,35 +180,36 @@ void get_movement(int player, int &x, int &y, int &b1, int &b2, int &b3, int &b4
         }
         else*/
         {
-            if( is_pressed( key_map[player].left ) )
+            if (is_pressed( key_map[player].left ))
                 x = -1;
-            else if( is_pressed( key_map[player].right ) )
-                x=1;
+            else if (is_pressed( key_map[player].right ))
+                x = 1;
             else
                 x = 0;
 
-            if( is_pressed( key_map[player].up ) )
+            if (is_pressed( key_map[player].up ))
                 y = -1;
-            else if( is_pressed( key_map[player].down ) )
+            else if (is_pressed( key_map[player].down ))
                 y = 1;
-            else y = 0;
+            else
+                y = 0;
 
-            if( is_pressed( key_map[player].b1 ) )
+            if (is_pressed( key_map[player].b1 ))
                 b1 = 1;
             else
                 b1 = 0;
 
-            if( is_pressed( key_map[player].b2 ) )
+            if (is_pressed( key_map[player].b2 ))
                 b2 = 1;
             else
                 b2 = 0;
 
-            if( is_pressed( key_map[player].b3 ) )
+            if (is_pressed( key_map[player].b3 ))
                 b3 = 1;
             else
                 b3 = 0;
 
-            if( is_pressed( key_map[player].b4 ) )
+            if (is_pressed( key_map[player].b4 ))
                 b4 = 1;
             else
                 b4 = 0;
@@ -214,7 +217,7 @@ void get_movement(int player, int &x, int &y, int &b1, int &b2, int &b3, int &b4
     }
     else
     {
-        x = y = b1 = b2 = b3 = 0;
+        x = y = b1 = b2 = b3 = b4 = 0;
     }
 }
 
@@ -227,13 +230,13 @@ void key_bindings(int player, int &left, int &right, int &up, int &down, int &b1
     b1 = key_map[player].b1;
     b2 = key_map[player].b2;
     b3 = key_map[player].b3;
-    b3 = key_map[player].b4;
+    b4 = key_map[player].b4;
 }
 
 
 void config_cleanup()
 {
-    if(key_map)
+    if (key_map)
     {
         free(key_map);
         key_map = NULL;
@@ -246,34 +249,35 @@ void config_cleanup()
 //
 int get_keycode(char const *str)
 {
-    if( !str[0] )
+    if (!str[0])
     {
         return -1;
     }
-    else if( !str[1] )
+    else if (!str[1])
     {
         return str[0];
     }
     else
     {
         int j;
-        char buf[20];
+        const size_t bufsize = 20;
+        char buf[bufsize];
         for( j = 256; j < JK_MAX_KEY; j++ )
         {
-            key_name( j, buf );
+            key_name(j, buf, bufsize);
             char *c = buf;
-            for( ; *c; c++ )
+            for (; *c; c++)
             {
-                if( *c == ' ' )
+                if (*c == ' ')
                 {
                     *c = '_';
                 }
                 else
                 {
-                    *c = tolower( *c );
+                    *c = tolower(*c);
                 }
             }
-            if( strcmp( str, buf ) == 0 )
+            if (strcmp(str, buf) == 0)
             {
                 return j;
             }

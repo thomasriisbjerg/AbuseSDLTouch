@@ -51,7 +51,7 @@ void help_handle_event(Event &ev)
     help_page=0;
       }
     }
-  } else if (ev.type==EV_KEY)
+  } else if (ev.type==EV_KEY || ev.type == EV_MOUSE_BUTTON)
   {
     if (ev.key==JK_ESC || help_page>=total_help_screens-1)
     {

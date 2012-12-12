@@ -12,11 +12,20 @@
 #   include "config.h"
 #endif
 
+#include <cstdlib>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
 
 #include "common.h"
+
+// thomasr geting playbook to compile
+using std::free;
+using std::memcpy;
+using std::memset;
+using std::qsort;
+using std::realloc;
+using std::malloc;
 
 // Load Abuse HMI files and covert them to standard Midi format
 //

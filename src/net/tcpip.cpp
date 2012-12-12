@@ -101,6 +101,81 @@ void unix_fd::broadcastable()
 }
 //}}}///////////////////////////////////
 
+/*int tcp_socket::listen(int port)
+{
+	sockaddr_in host;
+	memset( (char*) &host,0, sizeof(host));
+	host.sin_family = AF_INET;
+	host.sin_port = htons(port);
+	host.sin_addr.s_addr = htonl(INADDR_ANY);
+	if (bind(fd, (struct sockaddr *) &host, sizeof(sockaddr_in))==-1)
+	{
+	  fprintf(stderr,"net driver : could not bind socket to port %d\n",port);
+	  return 0;
+	}
+	if (::listen(fd,5)==-1)
+	{
+	  fprintf(stderr,"net driver : could not listen to socket on port %d\n",port);
+	  return 0;
+	}
+	listening=1;
+	return 1;
+}
+
+net_socket * tcp_socket::accept(net_address *&addr)
+{
+  if (listening)
+  {
+    struct sockaddr_in from;
+    socklen_t addr_len=sizeof(from);
+    int new_fd=::accept(fd,(sockaddr *)&from,&addr_len);
+    if (new_fd>=0)
+    {
+      addr=new ip_address(&from);
+      return new tcp_socket(new_fd);
+    }
+    else
+    { addr=NULL; return 0; }
+  }
+  return 0;
+}
+
+int udp_socket::read(void *buf, int size, net_address **addr)
+  {
+    int tr;
+    if (addr)
+    {
+      *addr=new ip_address;
+      socklen_t addr_size=sizeof(sockaddr_in);
+      tr=recvfrom(fd,buf,size,0, (sockaddr *) &((ip_address *)(*addr))->addr,&addr_size);
+    } else
+      tr=recv(fd,buf,size,0);
+    return tr;
+  }
+
+int udp_socket::write(void const *buf, int size, net_address *addr)
+  {
+    if (addr)
+      return sendto(fd,buf,size,0,(sockaddr *)(&((ip_address *)addr)->addr),sizeof(((ip_address *)addr)->addr));
+    else
+      return ::write(fd,(char*)buf,size);
+  }
+
+int udp_socket::listen(int port)
+{
+  sockaddr_in host;
+  memset( (char*) &host,0, sizeof(host));
+  host.sin_family = AF_INET;
+  host.sin_port = htons(port);
+  host.sin_addr.s_addr = htonl(INADDR_ANY);
+  if (bind(fd, (struct sockaddr *) &host, sizeof(sockaddr_in))==-1)
+  {
+    fprintf(stderr,"net driver : could not bind socket to port %d\n",port);
+    return 0;
+  }
+  return 1;
+}*/
+
 ////////////////////////////////////////////////////////////////////////
 //
 //  tcpip_protocol methods
@@ -118,8 +193,9 @@ net_address *tcpip_protocol::get_local_address()
 
     return a;
 #else
-  char my_name[100];                        // check to see if this address is 'hostname'
-  gethostname(my_name,100);
+    const size_t my_namesize = 100;
+  char my_name[my_namesize];                        // check to see if this address is 'hostname'
+  gethostname(my_name,my_namesize);
   //ip_address *ret = 0;
 
   if (my_name[0]<'0' || my_name[0]>'9')
@@ -216,18 +292,20 @@ net_address *tcpip_protocol::get_node_address(char const *&server_name,
     }
     else
     {
-      char name[256], *np;
+      const size_t namesize = 256;
+      char name[namesize], *np;
 
       np=name;
-      while (*server_name && *server_name!=':' && *server_name!='/')
+      while (*server_name && *server_name!=':' && *server_name!='/' && np < name + namesize - 1)
         *(np++)=*(server_name)++;
       *np=0;
       if (*server_name==':')
       {
         server_name++;
-        char port[256],*p;
+        const size_t portsize = 256;
+        char port[portsize],*p;
         p=port;
-        while (*server_name && *server_name!='/')
+        while (*server_name && *server_name!='/' && p < port + portsize - 1)
           *(p++)=*(server_name++);
         *p=0;
         int x;
@@ -382,7 +460,8 @@ int tcpip_protocol::handle_notification()
 
   if (notifier->ready_to_read())
   {
-    char buf[513];
+    const size_t bufsize = 512;
+    char buf[bufsize + 1];
     int len;
     // got a notification request "broadcast"
     ip_address *addr;
@@ -392,7 +471,7 @@ int tcpip_protocol::handle_notification()
         printf("Notifier: ");
 #endif
 
-    len = notifier->read(buf, 512, &tmp);
+    len = notifier->read(buf, bufsize, &tmp);
     addr = (ip_address *)tmp;
 #ifdef TCPIP_DEBUG
         if (len>0) {
@@ -405,8 +484,9 @@ int tcpip_protocol::handle_notification()
             buf[len] = 0;
       if  (strcmp(buf, notify_signature)==0) {
 #ifdef TCPIP_DEBUG
-                char s[256];
-                addr->store_string(s,256);
+                const size_t ssize = 256;
+                char s[ssize];
+                addr->store_string(s,ssize);
                 printf("responding to %s",s);
 #endif
         // send notification data to requester
@@ -434,7 +514,8 @@ net_address *tcpip_protocol::find_address(int port, char *name)
 //{{{
 {
   // name should be a 256 byte buffer
-    char s[256];
+	const size_t ssize = 256;
+    char s[ssize];
 
     end_notify();
 
@@ -453,7 +534,7 @@ net_address *tcpip_protocol::find_address(int port, char *name)
 
 //#ifdef TCPIP_DEBUG
             *((unsigned char *)(&bcast->addr.sin_addr)+3) = 255;
-            bcast->store_string(s,256);
+            bcast->store_string(s,ssize);
             fprintf(stderr,"Simulating broadcast to [%s]\n",s);
 //#endif
 
@@ -468,7 +549,7 @@ net_address *tcpip_protocol::find_address(int port, char *name)
     for (i=0; i<5; i++)
     {
 #ifdef TCPIP_DEBUG
-            bcast->store_string(s,256);
+            bcast->store_string(s,ssize);
             fprintf(stderr,"\r[%s]",s);
 #endif
         int found = 0;
@@ -502,7 +583,7 @@ net_address *tcpip_protocol::find_address(int port, char *name)
     strcpy(name,(*returned.begin())->name);
 
 #ifdef TCPIP_DEBUG
-    ret->store_string(s,256);
+    ret->store_string(s,ssize);
     fprintf(stderr,"Found [%s]\n",s);
 #endif
 
@@ -533,7 +614,8 @@ int tcpip_protocol::handle_responder()
 
   if (responder->ready_to_read())
   {
-    char buf[513];
+    const size_t bufsize = 512;
+    char buf[bufsize + 1];
     int len;
     // got a notification response
     ip_address *addr;
@@ -543,7 +625,7 @@ int tcpip_protocol::handle_responder()
         fprintf(stderr,"Responder: ");
 #endif
 
-    len = responder->read(buf, 512, &tmp);
+    len = responder->read(buf, bufsize, &tmp);
     addr = (ip_address *)tmp;
 
 #ifdef TCPIP_DEBUG
@@ -569,14 +651,15 @@ int tcpip_protocol::handle_responder()
           if (!found)
           {
 #ifdef TCPIP_DEBUG
-                    char s[256];
+                    const size_t ssize = 256;
+                    char s[ssize];
 #endif
                     RequestItem *r = new RequestItem;
                     r->addr = addr;
                     strcpy(r->name,buf+5);                    // ack hard coded numbers for now
             servers.insert(r);
 #ifdef TCPIP_DEBUG
-                    addr->store_string(s,256);
+                    addr->store_string(s,ssize);
                     fprintf(stderr,"accepted %s",s);
 #endif
                 }

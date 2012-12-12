@@ -35,7 +35,11 @@ extern void *save_order;         // load from "saveordr.lsp", contains a list or
 
 extern JCFont *console_font;
 
-#define MAX_SAVE_GAMES 15
+extern int has_multitouch;
+extern int has_joystick;
+
+//#define MAX_SAVE_GAMES 15
+#define MAX_SAVE_GAMES 5
 #define MAX_SAVE_LINES 5
 int last_save_game_number=0;
 
@@ -77,16 +81,20 @@ Jwindow *create_num_window(int mx, int total_saved, int lines, image **thumbnail
         x += iw;
     }
     if (thumbnails) { while (!thumbnails[n]) n++; }
-    buts[i]=new ico_button(x, y, ID_LOAD_GAME_NUMBER + n,
+    buts[i]=new ico_button(x, y, (has_multitouch ? ID_LOAD_GAME_PREVIEW : ID_LOAD_GAME_NUMBER) + n,
                save_buts[n*3+0],save_buts[n*3+0],save_buts[n*3+1],save_buts[n*3+2],NULL);
-    buts[i]->set_act_id(ID_LOAD_GAME_PREVIEW+n);
+    if (!has_multitouch)
+    	buts[i]->set_act_id(ID_LOAD_GAME_PREVIEW+n);
     n++;
   }
 
   for (i=0; i<total_saved-1; i++)
     buts[i]->next=buts[i+1];
 
-  return wm->CreateWindow(ivec2(mx, yres / 2 - (Jwindow::top_border() + maxih * 5) / 2), ivec2(-1), buts[0]);
+  Jwindow *window = wm->CreateWindow(ivec2(mx, yres / 2 - (Jwindow::top_border() + maxih * 5) / 2), ivec2(-1), buts[0]);
+//  if (!has_joystick)
+//    window->inm->allow_no_selections();
+  return window;
 }
 
 int get_save_spot()
@@ -231,9 +239,19 @@ int load_game(int show_all, char const *title)   // return 0 if the player escap
     buts[i]->next=buts[i+1];
 */
 
+    image *ok_image, *cancel_image;
+
+    ok_image = cache.img(cache.reg("art/frame.spe", "dev_ok", SPEC_IMAGE, 1))->copy();
+    cancel_image = cache.img(cache.reg("art/frame.spe", "cancel", SPEC_IMAGE, 1))->copy();
+
     // Create thumbnail window 5 pixels to the right of the list window
     Jwindow *l_win=create_num_window(0,total_saved,MAX_SAVE_LINES,thumbnails);
     Jwindow *preview=wm->CreateWindow(l_win->m_pos + ivec2(l_win->m_size.x + 5, 0), ivec2(max_w, max_h), NULL, title);
+    button *accept_button = new button(0, 0, ID_LOAD_GAME_NUMBER, ok_image,
+            new button(34, 0, ID_CANCEL, cancel_image, NULL));
+    Jwindow *accept_win = 0;
+    if (has_multitouch)
+    	accept_win = wm->CreateWindow(ivec2(xres / 2 - 61 / 2, yres - 38), ivec2(-1, -1), accept_button, title);
 
     preview->m_surf->PutImage(first, ivec2(preview->x1(), preview->y1()));
 
@@ -252,14 +270,18 @@ int load_game(int show_all, char const *title)   // return 0 if the player escap
             int draw_num=ev.message.id-ID_LOAD_GAME_PREVIEW;
             preview->clear();
             preview->m_surf->PutImage(thumbnails[draw_num], ivec2(preview->x1(), preview->y1()));
+            if (accept_button)
+            	accept_button->id = ID_LOAD_GAME_NUMBER + draw_num;
         }
 
-        if ((ev.type==EV_CLOSE_WINDOW) || (ev.type==EV_KEY && ev.key==JK_ESC))
+        if ((ev.type==EV_CLOSE_WINDOW) || (ev.type==EV_MESSAGE && ev.message.id==ID_CANCEL) || (ev.type==EV_KEY && ev.key==JK_ESC))
             quit=1;
     } while (!got_level && !quit);
 
     wm->close_window(l_win);
     wm->close_window(preview);
+    if (accept_win)
+    	wm->close_window(accept_win);
 
     for (i=0; i<total_saved; i++)
         delete thumbnails[i];

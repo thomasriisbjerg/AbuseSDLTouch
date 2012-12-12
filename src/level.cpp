@@ -20,6 +20,7 @@
 #include <limits.h>
 #include <time.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "common.h"
 
@@ -1288,8 +1289,9 @@ level::level(spec_directory *sd, bFILE *fp, char const *lev_name)
 
   the_game->need_refresh();
 
-  char cmd[100];
-  sprintf(cmd,symbol_str("loading"),lev_name);
+  const size_t cmdsize = 256;
+  char cmd[cmdsize];
+  snprintf(cmd, cmdsize,symbol_str("loading"),lev_name);
   stack_stat stat(cmd);
   Name = strdup(lev_name);
 
@@ -1298,8 +1300,18 @@ level::level(spec_directory *sd, bFILE *fp, char const *lev_name)
   {
     fp->seek(e->offset,0);
     int len=fp->read_uint8();   // read the length of the string
-    first_name=(char *)malloc(len);
-    fp->read(first_name,len);    // read the string
+    char *level_name=(char *)malloc(len);
+    fp->read(level_name,len);    // read the string
+    int i = 0;
+    for (i = len-1; i--; i >= 0) // loop backwards from end
+      if (level_name[i] == '/' || level_name[i] == '\\') // look for path separator
+        break;
+    ++i; // advance past path separator or back to the start of the string if no path separator
+    for (int j = i; j < len; j++)
+    	level_name[j] = tolower(level_name[j]);
+    first_name=(char *)malloc(len-i);
+    strcpy(first_name,level_name+i);
+    free(level_name);
   } else
   {
     first_name = strdup(Name);
@@ -1461,9 +1473,11 @@ void get_prof_assoc_filename(char *filename, char *prof_filename)
   for (s1=filename,s2=prof_filename,dot=NULL; *s1; s1++,s2++)
   {
     *s2=*s1;
-    if (*s1=='.') dot=s2;
+    if (*s1=='.')
+      dot=s2;
   }
-  if (dot) s2=dot+1;
+  if (dot)
+    s2=dot+1;
 
   *(s2++)='c';
   *(s2++)='p';
@@ -1480,8 +1494,9 @@ void level::level_loaded_notify()
     n=name();
   if (strstr(n,"levels/level"))
   {
-    char nm[100];
-    sprintf(nm,"music/abuse%c%c.hmi",n[12],n[13]);
+    const size_t nmsize = 100;
+    char nm[nmsize];
+    snprintf(nm,nmsize,"music/abuse%c%c.hmi",n[12],n[13]);
     bFILE *fp=open_file(nm,"rb");
     if (fp->open_failure())
     {
@@ -2152,11 +2167,12 @@ void level::write_cache_prof_info()
 {
   if (cache.prof_is_on())
   {
-    char pf_name[100];
+    const size_t pf_namesize = 100;
+    char pf_name[pf_namesize];
     if (first_name)
-      get_prof_assoc_filename(first_name,pf_name);
+      get_prof_assoc_filename(first_name,pf_name); // TODO send destination buffer length as argument
     else
-      get_prof_assoc_filename(Name,pf_name);
+      get_prof_assoc_filename(Name,pf_name); // TODO send destination buffer length as argument
 
 
     spec_directory sd;
@@ -2179,11 +2195,12 @@ void level::load_cache_info(spec_directory *sd, bFILE *fp)
 {
   if (!DEFINEDP(symbol_value(l_empty_cache)) || !symbol_value(l_empty_cache))
   {
-    char pf_name[100];
-    if (first_name)
-      get_prof_assoc_filename(first_name,pf_name);  // get cache info from orignal filename if this is a savegame
+    const size_t pf_namesize = 100;
+    char pf_name[pf_namesize];
+    if (first_name)                                  // get cache info from orignal filename if this is a savegame
+      get_prof_assoc_filename(first_name,pf_name);   // TODO send destination buffer length as argument
     else
-      get_prof_assoc_filename(Name,pf_name);
+      get_prof_assoc_filename(Name,pf_name); // TODO send destination buffer length as argument
 
 
     cache.load_cache_prof_info(pf_name,this);
@@ -2193,10 +2210,12 @@ void level::load_cache_info(spec_directory *sd, bFILE *fp)
 
 int level::save(char const *filename, int save_all)
 {
-    char name[255], bkname[255];
+    const size_t namesize = 255;
+    const size_t bknamesize = 255;
+    char name[namesize], bkname[bknamesize];
 
-    sprintf( name, "%s%s", get_save_filename_prefix(), filename );
-    sprintf( bkname, "%slevsave.bak", get_save_filename_prefix() );
+    snprintf( name, namesize, "%s%s", get_save_filename_prefix(), filename );
+    snprintf( bkname, bknamesize, "%slevsave.bak", get_save_filename_prefix() );
     if( !save_all && DEFINEDP( symbol_value( l_keep_backup ) ) &&
         symbol_value( l_keep_backup ) )   // make a backup
     {
@@ -2209,14 +2228,15 @@ int level::save(char const *filename, int save_all)
                 dprintf("unable to open backup file %s\n", bkname );
             else
             {
-                uint8_t buf[0x1000];
+                const size_t bufsize = 0x1000;
+                uint8_t buf[bufsize];
                 int32_t size = fp->file_size();
                 int tr = 1;
                 while( size && tr )
                 {
-                    int tr = fp->read(buf,0x1000);
+                    int tr = fp->read(buf,bufsize);
                     if( tr )
-                    tr = bk->write(buf,tr);
+                        tr = bk->write(buf,tr);
                     size -= tr;
                 }
             }
@@ -2334,6 +2354,7 @@ int level::save(char const *filename, int save_all)
         printf( "\nFailed to save game.\n" );
         printf( "I was trying to save to: '%s'\n\tPath: '%s'\n\tFile: '%s'\n", name, get_save_filename_prefix(), filename );
         printf( "\nPlease send an email to:\n\ttrandor@labyrinth.net.au\nwith these details.\nThanks.\n" );
+        assert(false);
         return 0;
     }
 

@@ -19,8 +19,9 @@
 
 void write_include(image *im, palette *pal, char *filename, char *name)
 {
-  char tmp_name[200];
-  strcpy(tmp_name,name);
+  const size_t tmpnamesize = 200;
+  char tmp_name[tmpnamesize];
+  strncpy(tmp_name,name,tmpnamesize-1); tmp_name[tmpnamesize-1] = 0;
   unsigned int j;
   int append=0,i;
   for (j=0; j<strlen(name); j++)

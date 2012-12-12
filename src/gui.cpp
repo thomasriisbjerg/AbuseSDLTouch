@@ -19,6 +19,8 @@
 #include "dev.h"
 #include "loader2.h"
 
+extern int has_multitouch;
+
 void ico_button::set_act_id(int id)
 {
   activate_id=id;
@@ -75,8 +77,8 @@ ifield *ico_switch_button::unlink(int id)
 
 void ico_switch_button::handle_event(Event &ev, image *screen, InputManager *im)
 {
-  if ((ev.type==EV_KEY && ev.key==13) || (ev.type==EV_MOUSE_BUTTON &&
-                                         ev.mouse_button))
+  if ((ev.type==EV_KEY && ev.key==JK_ENTER) || (ev.type==EV_MOUSE_BUTTON && // THOMASR
+		  bool(ev.mouse_button) != bool(has_multitouch)))
   {
     cur_but=cur_but->next;
     if (!cur_but) cur_but=blist;
@@ -91,8 +93,8 @@ void ico_button::draw(int active, image *screen)
     int x1, y1, x2, y2;
     area(x1, y1, x2, y2);
 
-    if (active != act && activate_id != -1 && active)
-        wm->Push(new Event(activate_id, NULL));
+//    if (active != act && activate_id != -1 && active)
+//        wm->Push(new Event(activate_id, NULL));
 
     screen->PutImage(cache.img((up && !active) ? u :
                                (up && active) ? ua :
@@ -120,13 +122,28 @@ extern int sfx_volume;
 
 void ico_button::handle_event(Event &ev, image *screen, InputManager *im)
 {
-  if ((ev.type==EV_KEY && ev.key==13) || (ev.type==EV_MOUSE_BUTTON &&
-                                         ev.mouse_button))
+  /*if ((ev.type==EV_KEY && ev.key==JK_ENTER) || (ev.type==EV_MOUSE_BUTTON && // THOMASR
+                                         bool(ev.mouse_button) != bool(has_multitouch)))
   {
-    int  x1,y1,x2,y2;
-    area(x1,y1,x2,y2);
     up=!up;
     draw(act,screen);
+    wm->Push(new Event(id,(char *)this));
+    if (S_BUTTON_PRESS_SND)
+      cache.sfx(S_BUTTON_PRESS_SND)->play(sfx_volume);
+  }*/
+  if ((ev.type==EV_KEY && ev.key==JK_ENTER) || (ev.type==EV_MOUSE_BUTTON && ev.mouse_button))
+  {
+    up=false;
+    draw(act,screen);
+  }
+  else if ((ev.type==EV_KEYRELEASE && ev.key==JK_ENTER) || (ev.type==EV_MOUSE_BUTTON && ev.mouse_button == 0))
+  {
+    up=true;
+    draw(act,screen);
+  }
+
+  if ((ev.type==EV_KEY && ev.key==JK_ENTER) || (ev.type==EV_MOUSE_BUTTON && ev.mouse_button == 0))
+  {
     wm->Push(new Event(id,(char *)this));
     if (S_BUTTON_PRESS_SND)
       cache.sfx(S_BUTTON_PRESS_SND)->play(sfx_volume);

@@ -18,11 +18,14 @@ struct flags_struct
     short mono;
     short nosound;
     short grabmouse;
+    short hidemouse;
     short nosdlparachute;
     short xres;
     short yres;
     short overlay;
     short gl;
+    short gles1;
+    short use_multitouch;
     int antialias;
 };
 
@@ -37,5 +40,7 @@ struct keys_struct
     int b3;
     int b4;
 };
+
+int get_key_binding(char const *dir, int i);
 
 #endif // _SETUP_H_

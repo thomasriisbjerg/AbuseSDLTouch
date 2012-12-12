@@ -217,23 +217,30 @@
 	 (setq telep_msg "Press down to teleport")
 
 	 (defun get_train_msg (message_num)
-	   (select message_num	  
-                   ;   0123456789012345678901234567890123456789012345678901234567890123456789
+	     (select message_num	  
+           ;   0123456789012345678901234567890123456789012345678901234567890123456789
 		   ;  "--------------------------------------------------------------------"  ; V-A
 		   ; Please keep all strings below shorter than the above line.               ; V-A
-		   (0 "Aim gun with mouse, fire with left mouse button")
-		   (1 "Collect ammo to increase firing speed")
-                   (2 "Press the down arrow to activate objects. This is a switch.")
-		   (3 "This console saves the state of the game, press down")
-		   (4 "Press down to activate platform")
-		   (5 "Hold down the right mouse button to use special powers")
-		   (6 "Use the CTRL & INS keys to select weapons")
-		   (7 "Press the up arrow to climb ladders")
-		   (8 "Press the down arrow to start!")
-		   (9 "Shoot hidden walls to destroy them")
-		   (10 "Shoot switch ball to activate")
-		   (11 "Press down to teleport")
-		   ))
+           ;(0 "Aim gun with mouse, fire with left mouse button")
+           (0 "Aim and fire with left control pad")
+           (1 "Collect ammo to increase firing speed")
+           ;(2 "Press the down arrow to activate objects. This is a switch.")
+           (2 "Press down to activate objects. This is a switch.")
+           (3 "This console saves the state of the game, press down")
+           (4 "Press down to activate platform")
+           ;(5 "Hold down the right mouse button to use special powers")
+           (5 "Press special power icon to toggle special powers on/off")
+           ;(6 "Use the CTRL & INS keys to select weapons")
+           (6 "Press weapon icons to switch weapons")
+           ;(7 "Press the up arrow to climb ladders")
+           (7 "Press up to climb ladders")
+           ;(8 "Press the down arrow to start!")
+           (8 "Press down to start!")
+           (9 "Shoot hidden walls to destroy them")
+           (10 "Shoot switch ball to activate")
+      	   (11 "Press down to teleport")
+          )
+      )
 
 	 (setq not_there       "This game has stopped running")
 	 (setq max_error       "Max players should be greater than or equal to Min players") ; V-C changed

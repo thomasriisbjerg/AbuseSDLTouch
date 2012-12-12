@@ -23,8 +23,10 @@ class net_configuration
 
   unsigned short port,
                  server_port;  // if we are a server, use our_port
-  char name[100];
-  char server_name[100];
+  static const size_t namesize = 100;
+  char name[namesize];
+  static const size_t servernamesize = 100;
+  char server_name[servernamesize];
 
 
   char min_players,

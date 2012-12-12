@@ -41,9 +41,6 @@ struct mask_line
   uint8_t *light;
 } ;
 
-
-extern int text_draw(int y, int x1, int y1, int x2, int y2, char const *buf, JCFont *font, uint8_t *cmap, char color);
-
 static mask_line *make_mask_lines(image *mask, int map_width)
 {
   mask_line *p=(mask_line *)malloc(mask->Size().y*sizeof(mask_line));

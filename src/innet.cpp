@@ -434,10 +434,10 @@ int request_server_entry()
       return 0;
     }
 
-    char uname[256];
-    if (get_login())
-      strcpy(uname,get_login());
-    else strcpy(uname,"unknown");
+    const size_t unamesize = 256;
+    char uname[unamesize];
+    strncpy(uname, get_login(), unamesize);
+
     uint8_t len=strlen(uname)+1;
     short nkills;
 
@@ -540,7 +540,7 @@ void net_reload()
                 else { o->x=100; o->y=100; }
 
                 f->next=new view(o,NULL,join_list->client_id);
-                strcpy(f->next->name,join_list->name);
+                strncpy(f->next->name,join_list->name, view::namesize);
                 o->set_controller(f->next);
                 f->next->set_tint(f->next->player_number);
                 if (start)

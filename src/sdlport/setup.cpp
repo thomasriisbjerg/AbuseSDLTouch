@@ -27,9 +27,11 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <SDL.h>
-#ifdef HAVE_OPENGL
 #ifdef __APPLE__
 #include <Carbon/Carbon.h>
+#endif    /* __APPLE__ */
+#ifdef HAVE_OPENGL
+#ifdef __APPLE__
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #else
@@ -37,6 +39,9 @@
 #include <GL/glu.h>
 #endif    /* __APPLE__ */
 #endif    /* HAVE_OPENGL */
+#ifdef HAVE_OPENGLES1
+#include <GLES/gl.h>
+#endif    /* HAVE_OPENGLES1 */
 
 #include "specs.h"
 #include "keys.h"
@@ -46,6 +51,7 @@ flags_struct flags;
 keys_struct keys;
 
 extern int xres, yres;
+extern int xwinres, ywinres;
 static unsigned int scale;
 
 //
@@ -70,11 +76,17 @@ void showHelp()
     printf( "  -fullscreen       Enable fullscreen mode\n" );
 #ifdef HAVE_OPENGL
     printf( "  -gl               Enable OpenGL\n" );
+#endif
+#ifdef HAVE_OPENGLES1
+    printf( "  -gles1            Enable OpenGL ES 1\n" );
+#endif
+#if defined (HAVE_OPENGL) || defined (HAVE_OPENGLES1)
     printf( "  -antialias        Enable anti-aliasing (with -gl only)\n" );
 #endif
     printf( "  -h, --help        Display this text\n" );
     printf( "  -mono             Disable stereo sound\n" );
     printf( "  -nosound          Disable sound\n" );
+    printf( "  -hidemouse        Hide the mouse cursor\n" );
     printf( "  -scale <arg>      Scale to <arg>\n" );
 //    printf( "  -x <arg>          Set the width to <arg>\n" );
 //    printf( "  -y <arg>          Set the height to <arg>\n" );
@@ -86,38 +98,38 @@ void showHelp()
 //
 // Create a default 'abuserc' file
 //
-void createRCFile( char *rcfile )
-{
+void createRCFile(char *rcfile) {
     FILE *fd = NULL;
 
-    if( (fd = fopen( rcfile, "w" )) != NULL )
+    if ((fd = fopen(rcfile, "w")) != NULL)
     {
-        fputs( "; Abuse-SDL Configuration file\n\n", fd );
-        fputs( "; Startup fullscreen\nfullscreen=0\n\n", fd );
-        #ifdef __APPLE__
-        fputs( "; Use DoubleBuffering\ndoublebuf=1\n\n", fd );
-        fputs( "; Use OpenGL\ngl=1\n\n", fd );
-        #else
-        fputs( "; Use DoubleBuffering\ndoublebuf=0\n\n", fd );
-        fputs( "; Use OpenGL\ngl=0\n\n", fd );
-        fputs( "; Location of the datafiles\ndatadir=", fd );
-        fputs( ASSETDIR "\n\n", fd );
-        #endif
-        fputs( "; Use mono audio only\nmono=0\n\n", fd );
-        fputs( "; Grab the mouse to the window\ngrabmouse=0\n\n", fd );
-        fputs( "; Set the scale factor\nscale=2\n\n", fd );
-        fputs( "; Use anti-aliasing (with gl=1 only)\nantialias=1\n\n", fd );
-//        fputs( "; Set the width of the window\nx=320\n\n", fd );
-//        fputs( "; Set the height of the window\ny=200\n\n", fd );
-        fputs( "; Disable the SDL parachute in the case of a crash\nnosdlparachute=0\n\n", fd );
-        fputs( "; Key mappings\n", fd );
-        fputs( "left=LEFT\nright=RIGHT\nup=UP\ndown=DOWN\n", fd );
-        fputs( "fire=SPACE\nweapprev=CTRL_R\nweapnext=INSERT\n", fd );
-        fclose( fd );
+        fprintf(fd, "; Abuse-SDL Configuration file\n\n");
+        fprintf(fd, "; Startup fullscreen\nfullscreen=%i\n\n",
+                flags.fullscreen);
+        fprintf(fd, "; Use DoubleBuffering\ndoublebuf=%i\n\n", flags.doublebuf);
+        fprintf(fd, "; Use OpenGL\ngl=%i\n\n", flags.gl);
+        fprintf(fd, "; Use OpenGL ES 1\ngles1=%i\n\n", flags.gles1);
+#ifndef __APPLE__
+        fprintf(fd, "; Location of the datafiles\ndatadir=%s\n\n", get_filename_prefix());
+#endif
+        fprintf(fd, "; Use mono audio only\nmono=%i\n\n", flags.mono);
+        fprintf(fd, "; Grab the mouse to the window\ngrabmouse=%i\n\n", flags.grabmouse);
+        fprintf(fd, "; Set the scale factor\nscale=%i\n\n", scale);
+        fprintf(fd, "; Use anti-aliasing (with gl=1 only)\nantialias=%i\n\n", flags.antialias);
+        fprintf(fd, "; Hide the mouse cursor\nhidemouse=%i\n\n", flags.hidemouse);
+        fprintf(fd, "; Hide the mouse cursor\nuse_multitouch=%i\n\n", flags.use_multitouch);
+//        fprintf( fd, "; Set the width of the window\nx=%i\n\n", flags.xres );
+//        fprintf( fd, "; Set the height of the window\ny=%i\n\n", flags.yres );
+        fprintf(fd, "; Disable the SDL parachute in the case of a crash\nnosdlparachute=%i\n\n", flags.nosdlparachute);
+        fprintf(fd, "; Key mappings\n");
+        // TODO: print actual default values for key bindings using key_name(int, char*)
+        fprintf(fd, "left=LEFT\nright=RIGHT\nup=UP\ndown=DOWN\n");
+        fprintf(fd, "fire=SPACE\nspecial=SHIFT_L\nweapprev=CTRL_R\nweapnext=INSERT\n");
+        fclose(fd);
     }
     else
     {
-        printf( "Unable to create 'abuserc' file.\n" );
+        printf("Unable to create 'abuserc' file.\n");
     }
 }
 
@@ -127,12 +139,12 @@ void createRCFile( char *rcfile )
 void readRCFile()
 {
     FILE *fd = NULL;
-    char *rcfile;
     char buf[255];
     char *result;
 
-    rcfile = (char *)malloc( strlen( get_save_filename_prefix() ) + 9 );
-    sprintf( rcfile, "%s/abuserc", get_save_filename_prefix() );
+    const size_t rcfilesize = 256;
+    char rcfile[rcfilesize];
+    snprintf(rcfile, rcfilesize, "%s/abuserc", get_save_filename_prefix());
     if( (fd = fopen( rcfile, "r" )) != NULL )
     {
         while( fgets( buf, sizeof( buf ), fd ) != NULL )
@@ -162,8 +174,6 @@ void readRCFile()
             {
                 result = strtok( NULL, "\n" );
                 scale = atoi( result );
-//                flags.xres = xres * atoi( result );
-//                flags.yres = yres * atoi( result );
             }
 /*            else if( strcasecmp( result, "x" ) == 0 )
             {
@@ -181,6 +191,13 @@ void readRCFile()
                 // at least inform the user.
                 result = strtok( NULL, "\n" );
                 flags.gl = atoi( result );
+            }
+            else if( strcasecmp( result, "gles1" ) == 0 )
+            {
+                // We leave this in even if we don't have OpenGL ES so we can
+                // at least inform the user.
+                result = strtok( NULL, "\n" );
+                flags.gles1 = atoi( result );
             }
 #ifdef HAVE_OPENGL
             else if( strcasecmp( result, "antialias" ) == 0 )
@@ -201,6 +218,16 @@ void readRCFile()
             {
                 result = strtok( NULL, "\n" );
                 set_filename_prefix( result );
+            }
+            else if( strcasecmp( result, "hidemouse" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.hidemouse = atoi( result );
+            }
+            else if ( strcasecmp(result, "use_multitouch" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.use_multitouch = atoi( result );
             }
             else if( strcasecmp( result, "left" ) == 0 )
             {
@@ -243,14 +270,13 @@ void readRCFile()
                 keys.b4 = key_value( result );
             }
         }
-        fclose( fd );
+        fclose(fd);
     }
     else
     {
         // Couldn't open the abuserc file so let's create a default one
         createRCFile( rcfile );
     }
-    free( rcfile );
 }
 
 //
@@ -285,8 +311,6 @@ void parseCommandLine( int argc, char **argv )
             if( sscanf( argv[++ii], "%d", &result ) )
             {
                 scale = result;
-/*                flags.xres = xres * scale;
-                flags.yres = yres * scale; */
             }
         }
 /*        else if( !strcasecmp( argv[ii], "-x" ) )
@@ -305,8 +329,7 @@ void parseCommandLine( int argc, char **argv )
                 flags.yres = y;
             }
         }*/
-        else if( !strcasecmp( argv[ii], "-nosound" ) )
-        {
+        else if (!strcasecmp(argv[ii], "-nosound")) {
             flags.nosound = 1;
         }
         else if( !strcasecmp( argv[ii], "-gl" ) )
@@ -315,14 +338,19 @@ void parseCommandLine( int argc, char **argv )
             // at least inform the user.
             flags.gl = 1;
         }
-#ifdef HAVE_OPENGL
+        else if ( !strcasecmp( argv[ii], "-gles1" ) )
+        {
+            // We leave this in even if we don't have OpenGL ES so we can
+            // at least inform the user.
+            flags.gles1 = 1;
+        }
+#if defined HAVE_OPENGL || defined HAVE_OPENGLES1
         else if( !strcasecmp( argv[ii], "-antialias" ) )
         {
             flags.antialias = GL_LINEAR;
         }
 #endif
-        else if( !strcasecmp( argv[ii], "-mono" ) )
-        {
+        else if (!strcasecmp(argv[ii], "-mono")) {
             flags.mono = 1;
         }
         else if( !strcasecmp( argv[ii], "-datadir" ) )
@@ -338,42 +366,67 @@ void parseCommandLine( int argc, char **argv )
             showHelp();
             exit( 0 );
         }
+        else if( !strcasecmp( argv[ii], "-hidemouse" ) )
+        {
+            flags.hidemouse = 1;
+        }
+        else if( !strcasecmp(argv[ii], "-use_multitouch" ) )
+        {
+            flags.use_multitouch = 1;
+        }
     }
 }
 
 //
 // Setup SDL and configuration
 //
-void setup( int argc, char **argv )
-{
+void setup(int argc, char **argv) {
     // Initialise default settings
-    flags.fullscreen        = 0;            // Start in a window
-    flags.mono                = 0;            // Enable stereo sound
-    flags.nosound            = 0;            // Enable sound
-    flags.grabmouse            = 0;            // Don't grab the mouse
-    flags.nosdlparachute    = 0;            // SDL error handling
-    flags.xres = xres        = 320;            // Default window width
-    flags.yres = yres        = 200;            // Default window height
-#ifdef __APPLE__
-    flags.gl                = 1;            // Use opengl
-    flags.doublebuf            = 1;            // Do double buffering
+    flags.mono = 0; // Enable stereo sound
+    flags.nosound = 0; // Enable sound
+    flags.grabmouse = 0; // Don't grab the mouse
+    flags.nosdlparachute = 0; // SDL error handling
+    flags.xres = xwinres = xres = 320; // Default window width
+    flags.yres = ywinres = yres = 200; // Default window height
+#if defined(__APPLE__)
+    flags.fullscreen = 0; // Start in a window
+    flags.gl = 1; // Use opengl
+    flags.doublebuf = 1;// Do double buffering
+    flags.gles1 = 0;
+    flags.hidemouse = 0;
+    flags.use_multitouch = 0;
+    scale = 1;
+#elif defined (__QNXNTO__) // BB10 and PlayBook
+    flags.fullscreen = 1;
+    flags.gl = 0;
+    flags.gles1 = 1;
+    flags.doublebuf = 1;
+    flags.hidemouse = 1;
+    flags.use_multitouch = 1;
+    scale = 0;
 #else
-    flags.gl                = 0;            // Don't use opengl
-    flags.doublebuf            = 0;            // No double buffering
-    #endif
-#ifdef HAVE_OPENGL
-    flags.antialias            = GL_NEAREST;    // Don't anti-alias
+    flags.fullscreen = 0; // Start in a window
+    flags.gl = 0; // Don't use opengl
+    flags.doublebuf = 0;// No double buffering
+    flags.gles1 = 0;
+    flags.hidemouse = 0;
+    flags.use_multitouch = 0;
+    scale = 1;
 #endif
-    keys.up                    = key_value( "UP" );
-    keys.down                = key_value( "DOWN" );
-    keys.left                = key_value( "LEFT" );
-    keys.right                = key_value( "RIGHT" );
-    keys.b3                    = key_value( "CTRL_R" );
-    keys.b4                    = key_value( "INSERT" );
-    scale                    = 2;            // Default scale amount
+#if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES1)
+    flags.antialias = GL_NEAREST; // Don't anti-alias
+#endif
+    keys.up = key_value("UP");
+    keys.down = key_value("DOWN");
+    keys.left = key_value("LEFT");
+    keys.right = key_value("RIGHT");
+    keys.b1 = key_value("SHIFT_L");
+    keys.b2 = key_value("SPACE");
+    keys.b3 = key_value("CTRL_R");
+    keys.b4 = key_value("INSERT");
 
     // Display our name and version
-    printf( "%s %s\n", PACKAGE_NAME, PACKAGE_VERSION );
+    //printf( "%s %s\n", PACKAGE_NAME, PACKAGE_VERSION );
 
     // Initialize SDL with video and audio support
     if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0 )
@@ -385,39 +438,38 @@ void setup( int argc, char **argv )
 
     // Set the savegame directory
     char *homedir;
-    char *savedir;
     FILE *fd = NULL;
 
-    if( (homedir = getenv( "HOME" )) != NULL )
+    if ((homedir = getenv("HOME")) != NULL)
     {
-        savedir = (char *)malloc( strlen( homedir ) + 9 );
-        sprintf( savedir, "%s/.abuse/", homedir );
+        const size_t savedirsize = 256;
+        char savedir[savedirsize];
+        snprintf(savedir, savedirsize, "%s/.abuse/", homedir);
         // Check if we already have a savegame directory
-        if( (fd = fopen( savedir, "r" )) == NULL )
+        if ((fd = fopen(savedir, "r")) == NULL)
         {
             // FIXME: Add some error checking here
-            mkdir( savedir, S_IRUSR | S_IWUSR | S_IXUSR );
+            mkdir(savedir, S_IRUSR | S_IWUSR | S_IXUSR);
         }
         else
         {
-            fclose( fd );
+            fclose(fd);
         }
-        set_save_filename_prefix( savedir );
-        free( savedir );
+        set_save_filename_prefix(savedir);
     }
     else
     {
         // Warn the user that we couldn't set the savename prefix
-        printf( "WARNING: Unable to get $HOME environment variable.\n" );
-        printf( "         Savegames will probably fail.\n" );
+        printf("WARNING: Unable to get $HOME environment variable.\n");
+        printf("         Savegames will probably fail.\n");
         // Just use the working directory.
         // Hopefully they have write permissions....
-        set_save_filename_prefix( "" );
+        set_save_filename_prefix("");
     }
 
     // Set the datadir to a default value
     // (The current directory)
-    #ifdef __APPLE__
+#ifdef __APPLE__
     UInt8 buffer[255];
     CFURLRef bundleurl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
     CFURLRef url = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, bundleurl, CFSTR("Contents/Resources/data"), true);
@@ -428,28 +480,43 @@ void setup( int argc, char **argv )
     }
     else
         set_filename_prefix( (const char*)buffer );
-    #else
-    set_filename_prefix( ASSETDIR );
-    #endif
+#else
+    set_filename_prefix (ASSETDIR);
+#endif
 
     // Load the users configuration
     readRCFile();
 
     // Handle command-line parameters
-    parseCommandLine( argc, argv );
+    parseCommandLine(argc, argv);
 
     // Calculate the scaled window size.
-    flags.xres = xres * scale;
-    flags.yres = yres * scale;
+    flags.xres = xwinres = xres * scale;
+    flags.yres = ywinres = yres * scale;
 
     // Stop SDL handling some errors
-    if( flags.nosdlparachute )
-    {
+    if (flags.nosdlparachute) {
         // segmentation faults
-        signal( SIGSEGV, SIG_DFL );
+        signal(SIGSEGV, SIG_DFL);
         // floating point errors
-        signal( SIGFPE, SIG_DFL );
+        signal(SIGFPE, SIG_DFL);
     }
+
+    // dump flags
+    /*printf("flags.fullscreen %d\n", flags.fullscreen);
+    printf("flags.doublebuf %d\n", flags.doublebuf);
+    printf("flags.mono %d\n", flags.mono);
+    printf("flags.nosound %d\n", flags.nosound);
+    printf("flags.grabmouse %d\n", flags.grabmouse);
+    printf("flags.nosdlparachute %d\n", flags.nosdlparachute);
+    printf("flags.xres %d\n", flags.xres);
+    printf("flags.yres %d\n", flags.yres);
+    printf("flags.gl %d\n", flags.gl);
+    printf("flags.gles1 %d\n", flags.gles1);
+    printf("flags.antialias %s\n", flags.antialias == GL_NEAREST ? "NEAREST" : flags.antialias == GL_LINEAR ? "LINEAR" : "<unknown>");
+    printf("flags.hidemouse %d\n", flags.hidemouse);
+    printf("flags.use_multitouch %d\n", flags.use_multitouch);
+    printf("scale %d\n", scale);*/
 }
 
 //
@@ -457,21 +524,21 @@ void setup( int argc, char **argv )
 //
 int get_key_binding(char const *dir, int i)
 {
-    if( strcasecmp( dir, "left" ) == 0 )
+    if (strcasecmp(dir, "left") == 0)
         return keys.left;
-    else if( strcasecmp( dir, "right" ) == 0 )
+    else if (strcasecmp(dir, "right") == 0)
         return keys.right;
-    else if( strcasecmp( dir, "up" ) == 0 )
+    else if (strcasecmp(dir, "up") == 0)
         return keys.up;
-    else if( strcasecmp( dir, "down" ) == 0 )
+    else if (strcasecmp(dir, "down") == 0)
         return keys.down;
-    else if( strcasecmp( dir, "b1" ) == 0 )
+    else if (strcasecmp(dir, "b1") == 0)
         return keys.b1;
-    else if( strcasecmp( dir, "b2" ) == 0 )
+    else if (strcasecmp(dir, "b2") == 0)
         return keys.b2;
-    else if( strcasecmp( dir, "b3" ) == 0 )
+    else if (strcasecmp(dir, "b3") == 0)
         return keys.b3;
-    else if( strcasecmp( dir, "b4" ) == 0 )
+    else if (strcasecmp(dir, "b4") == 0)
         return keys.b4;
 
     return 0;

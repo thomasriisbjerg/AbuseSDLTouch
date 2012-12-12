@@ -18,6 +18,7 @@
 
 #include <fcntl.h>
 #include <string.h>
+#include <assert.h>
 
 #include "common.h"
 
@@ -50,8 +51,9 @@ int crc_man_write_crc_file(char const *filename)
 
 int CrcManager::write_crc_file(char const *filename)  // return 0 on failure
 {
-  char msg[100];
-  sprintf(msg, "%s", symbol_str("calc_crc"));  // this may take some time, show the user a status indicator
+  const size_t msgsize = 100;
+  char msg[msgsize];
+  snprintf(msg, msgsize, "%s", symbol_str("calc_crc"));  // this may take some time, show the user a status indicator
   if (stat_man) stat_man->push(msg,NULL);
 
   int i,total=0;
@@ -201,7 +203,7 @@ void CacheList::unmalloc(CacheItem *i)
     case SPEC_EXTERNAL_LCACHE : if (i->data) free(i->data); break;
     case SPEC_PALETTE : delete ((char_tint *)i->data); break;
     default :
-      printf("Trying to unmalloc unknown type\n");
+      printf("Trying to unmalloc unknown type\n"); break;
   }
   i->data=NULL;
   i->last_access=-1;
@@ -786,6 +788,7 @@ int CacheList::AllocId()
                 prof_data = NULL;
             }
             total += add_size;
+//            printf("cache total %i\n", total);
         }
     }
     last_registered = ret;
@@ -818,7 +821,7 @@ int CacheList::reg(char const *filename, char const *name, int type, int rm_dups
     	// Missing sound effect is not a critical error, so we don't
     	// quit when error happens.
         bFILE *check = open_file(filename, "rb");
-        if (check->open_failure())
+        if (!check->open_failure())
         {
         	printf("Unable to open sfx file '%s' for reading, ignoring.\n", filename);
         }
@@ -832,6 +835,7 @@ int CacheList::reg(char const *filename, char const *name, int type, int rm_dups
         if (!sd)
         {
             printf("Unable to open file %s for item %s\n", filename, name);
+            assert(false);
             exit(0);
         }
 
@@ -843,6 +847,7 @@ int CacheList::reg(char const *filename, char const *name, int type, int rm_dups
         if (!se)
         {
             printf("No such item %s in file %s\n", name, filename);
+            assert(false);
             exit(0);
         }
 
@@ -852,6 +857,7 @@ int CacheList::reg(char const *filename, char const *name, int type, int rm_dups
         {
             printf("Item %s of file %s should be type %s\n",
                    name, filename, spec_types[type]);
+            assert(false);
             exit(0);
         }
 

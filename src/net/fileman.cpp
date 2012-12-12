@@ -21,6 +21,7 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include "common.h"
 
@@ -182,26 +183,37 @@ int file_manager::nfs_client::send_read()   // return 0 if failure on socket, no
 }
 
 
-void file_manager::secure_filename(char *filename, char *mode)
+void file_manager::secure_filename(char *filename, const size_t filenamesize, char *mode, const size_t modesize)
 {
   if (!no_security)
   {
-    if (filename[0]=='/') { filename[0]=0; return ; }
+    if (filename[0]=='/')
+    {
+      filename[0]=0;
+      return;
+    }
     int level=0;
     char *f=filename;
-    while (*f)
+    while (*f && f < filename + filenamesize)
     {
-      if (*f=='/') { f++; level++; }
+      if (*f=='/')
+      {
+        f++;
+        level++;
+      }
       else if (*f=='.' && f[1]=='.')
       {
-    if (f[3]=='.') while (*f!='.') f++;
-    else
-    {
-      f+=2;
-      level--;
-    }
-      } else f++;
-
+        if (f[3]=='.')
+          while (*f!='.' && f < filename + filenamesize)
+            f++;
+        else
+        {
+          f+=2;
+          level--;
+        }
+      }
+      else
+        f++;
     }
     if (level<0)
       filename[0]=0;
@@ -229,13 +241,15 @@ file_manager::nfs_client::~nfs_client()
 void file_manager::add_nfs_client(net_socket *sock)
 {
   uint8_t size[2];
-  char filename[300],mode[20],*mp;
+  const size_t filenamesize = 200;
+  const size_t modesize = 20;
+  char filename[filenamesize],mode[modesize],*mp;
   if (sock->read(size,2)!=2) { delete sock; return ; }
   if (sock->read(filename,size[0])!=size[0]) { delete sock; return ; }
   if (sock->read(mode,size[1])!=size[1]) { delete sock; return ; }
 
 
-  secure_filename(filename,mode);  // make sure this filename isn't a security risk
+  secure_filename(filename,filenamesize,mode,modesize);  // make sure this filename isn't a security risk
   if (filename[0]==0) { fprintf(stderr,"(denied)\n"); delete sock; return ; }
 
   mp=mode;
@@ -395,7 +409,7 @@ int file_manager::rf_open_file(char const *&filename, char const *mode)
 {
   net_address *fs_server_addr=NULL;
 
-  if (filename[0]=='/' && filename[1]=='/')   // passive server file reference?
+  if (filename[0]=='/' && filename[1]=='/' && strncmp(filename, get_save_filename_prefix(), strlen(get_save_filename_prefix())))   // passive server file reference?
   {
     filename+=2;
 
@@ -445,10 +459,11 @@ int file_manager::rf_open_file(char const *&filename, char const *mode)
     mode++;
   }
 
-  char tmp_name[200];
+  const size_t tmp_namesize = 200;
+  char tmp_name[tmp_namesize];
   if (get_filename_prefix() && filename[0] != '/')
-    sprintf(tmp_name,"%s%s",get_filename_prefix(),filename);
-  else strcpy(tmp_name,filename);
+    snprintf(tmp_name,tmp_namesize,"%s%s",get_filename_prefix(),filename);
+  else strncpy(tmp_name,filename,tmp_namesize);
 
   int f=open(tmp_name,flags,S_IRWXU | S_IRWXG | S_IRWXO);
   if (f>=0)

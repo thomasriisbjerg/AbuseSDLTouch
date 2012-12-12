@@ -12,6 +12,7 @@
 #define __LISP_HPP_
 
 #include <cstdlib>
+#include <cstring>
 #include <stdint.h>
 
 #ifdef L_PROFILE
@@ -29,6 +30,8 @@ extern uint16_t atan_table[TBS];
 #define DEFINEDP(x) ((x)!=l_undefined)
 class bFILE;
 extern bFILE *current_print_file;
+
+using std::size_t;
 
 enum
 {

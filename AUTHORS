@@ -6,6 +6,11 @@ Sam Hocevar <sam@hocevar.net>
   Current code maintainer
   Debian package maintainer
 
+Thomas Riisbjerg <thomas.riisbjerg@gmail.com>
+  Blackberry 10 & PlayBook port
+  Touch-screen controls
+  Misc bugfixing
+
 Anthony Kruize <trandor@labyrinth.net.au>
   SDL port maintainer
 

@@ -16,6 +16,7 @@
 //
 #include <stdint.h>
 #include <stdio.h>
+#include <assert.h>
 
 //
 // Lol Engine
@@ -67,7 +68,7 @@ static inline uint32_t lltl(uint32_t x)
 
 #define ERROR(x,st) { if (!(x)) \
    { printf("Error on line %d of %s : %s\n", \
-     __LINE__,__FILE__,st); exit(1); } }
+     __LINE__,__FILE__,st); assert(false); exit(1); } }
 
 // These macros should be removed for the non-debugging version
 #ifdef NO_CHECK

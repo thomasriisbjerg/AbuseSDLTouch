@@ -43,26 +43,33 @@ extern image *small_render;
 
 void status_bar::load()
 {
-  char sbname[100];
-  char iname[20];
+  const size_t sbnamesize = 100;
+  char sbname[sbnamesize];
+  const size_t inamesize = 20;
+  char iname[inamesize];
   void *l_name = LSymbol::FindOrCreate("sbar_file");
   if (symbol_value(l_name)!=l_undefined)
-    strcpy(sbname,lstring_value(symbol_value(l_name)));
-  else strcpy(sbname,"art/statbar.spe");
+  {
+    strncpy(sbname,lstring_value(symbol_value(l_name)),sbnamesize-1); sbname[sbnamesize-1] = 0;
+  }
+  else
+  {
+    strncpy(sbname,"art/statbar.spe",sbnamesize-1); sbname[sbnamesize-1] = 0;
+  }
 
   int i;
   for (i=0; i<TOTAL_WEAPONS; i++)
   {
-    sprintf(iname,"bweap%04d.pcx",i+1);
+    snprintf(iname,inamesize,"bweap%04d.pcx",i+1);
     bweap[i]=cache.reg(sbname,iname,SPEC_IMAGE);
 
-    sprintf(iname,"dweap%04d.pcx",i+1);
+    snprintf(iname,inamesize,"dweap%04d.pcx",i+1);
     dweap[i]=cache.reg(sbname,iname,SPEC_IMAGE);
   }
 
   for (i=0; i<30; i++)
   {
-    sprintf(iname,"bnum%02d",i);
+    snprintf(iname,inamesize,"bnum%02d",i);
     bnum[i]=cache.reg(sbname,iname,SPEC_IMAGE);
   }
 
@@ -112,7 +119,11 @@ void status_bar::redraw(image *screen)
     sb_h=(small_render ? sb->Size().y*2 : sb->Size().y);
 
     // status bar x & y position
+#if 1 // THOMASR sbar top
+    int sx=xres/2-sb_w/2,sy=0;
+#else // THOMASR sbar bottom
     int sx=xres/2-sb_w/2,sy=yres-sb_h;
+#endif
 
     // weapon x offset, and x add increment
     int wx=small_render ? 80 : 40,wa=small_render ? 34*2 : 34;
@@ -190,8 +201,13 @@ void status_bar::area(int &x1, int &y1, int &x2, int &y2)
 
   x1=xres/2-sb_w/2;
   x2=xres/2+sb_w/2;
+#if 1 // THOMASR sbar top
+  y1=0;
+  y2=sb_h;
+#else // THOMASR sbar bottom
   y1=yres-sb_h;
   y2=yres;
+#endif
 }
 
 
@@ -287,6 +303,17 @@ void status_bar::step()
   int sx1,sy1,sx2,sy2;
   area(sx1,sy1,sx2,sy2);
 
+#if 1 // THOMASR sbar top
+  int view_y1=v->m_aa.y;
+  if (sy2>view_y1)     // tell view to shrink if it is overlapping the status bar
+  {
+    v->suggest.send_view=1;
+    v->suggest.cx1 = v->m_aa.x;
+    v->suggest.cy1 = sy2 + 2;
+    v->suggest.cx2 = v->m_bb.x;
+    v->suggest.cy2 = v->m_bb.y;
+  }
+#else // THOMASR sbar bottom
   int view_y2=small_render ? (v->m_bb.y-v->m_aa.y+1)*2+v->m_aa.y : v->m_bb.y;
   if (sy1<view_y2)     // tell view to shrink if it is overlapping the status bar
   {
@@ -296,6 +323,7 @@ void status_bar::step()
     v->suggest.cx2 = v->m_bb.x;
     v->suggest.cy2 = small_render ? (sy1 - v->m_aa.y - 2) / 2 + v->m_aa.y : sy1 - 2;
   }
+#endif
 
   if (sbar<=0 || !total_weapons) return ;
 
@@ -328,7 +356,7 @@ void status_bar::step()
       need_refresh();
     }
 
-    if (last_demo_mbut==2 && icon_in_selection!=v->current_weapon &&
+    if (last_demo_mbut==RIGHT_BUTTON && icon_in_selection!=v->current_weapon &&
     icon_in_selection!=-1) // the user requested a weapon change
     {
       v->suggest.send_weapon_change=1;

@@ -107,10 +107,11 @@ void lbreak(char const *format, ...)
   break_level++;
   bFILE *old_file=current_print_file;
   current_print_file=NULL;
-  char st[300];
+  const size_t stsize = 300;
+  char st[stsize];
   va_list ap;
   va_start(ap, format);
-  vsprintf(st, format, ap);
+  vsnprintf(st, stsize, format, ap);
   va_end(ap);
   dprintf("%s\n", st);
   int cont=0;
@@ -118,7 +119,7 @@ void lbreak(char const *format, ...)
   {
     dprintf("type q to quit\n");
     dprintf("%d. Break> ", break_level);
-    dgets(st, 300);
+    dgets(st, stsize);
     if (!strcmp(st, "c") || !strcmp(st, "cont") || !strcmp(st, "continue"))
       cont=1;
     else if (!strcmp(st, "w") || !strcmp(st, "where"))
@@ -1265,7 +1266,8 @@ static void lprint_string(char const *st)
 
 void LObject::Print()
 {
-    char buf[32];
+	const size_t bufsize = 32;
+    char buf[bufsize];
 
     print_level++;
 
@@ -1299,7 +1301,7 @@ void LObject::Print()
         }
         break;
     case L_NUMBER:
-        sprintf(buf, "%ld", ((LNumber *)this)->m_num);
+        snprintf(buf, bufsize, "%ld", ((LNumber *)this)->m_num);
         lprint_string(buf);
         break;
     case L_SYMBOL:
@@ -1325,11 +1327,11 @@ void LObject::Print()
             dprintf("\"%s\"", lstring_value(this));
         break;
     case L_POINTER:
-        sprintf(buf, "%p", lpointer_value(this));
+        snprintf(buf, bufsize, "%p", lpointer_value(this));
         lprint_string(buf);
         break;
     case L_FIXED_POINT:
-        sprintf(buf, "%g", (lfixed_point_value(this) >> 16) +
+        snprintf(buf, bufsize, "%g", (lfixed_point_value(this) >> 16) +
                 ((lfixed_point_value(this) & 0xffff)) / (double)0x10000);
         lprint_string(buf);
         break;
@@ -1377,6 +1379,7 @@ void LObject::Print()
         break;
     default:
         dprintf("Shouldn't happen\n");
+        break;
     }
 
     print_level--;
@@ -1490,6 +1493,7 @@ LObject *LSymbol::EvalFunction(void *arg_list)
     }
     default:
         fprintf(stderr, "not a fun, shouldn't happen\n");
+        break;
     }
 
 #ifdef L_PROFILE
@@ -1507,8 +1511,9 @@ void pro_print(bFILE *out, LSymbol *p)
   {
     pro_print(out, p->m_right);
     {
-      char st[100];
-      sprintf(st, "%20s %f\n", lstring_value(p->GetName()), p->time_taken);
+      const size_t stsize = 100;
+      char st[stsize];
+      snprintf(st, stsize, "%20s %f\n", lstring_value(p->GetName()), p->time_taken);
       out->write(st, strlen(st));
     }
     pro_print(out, p->m_left);
@@ -1678,7 +1683,7 @@ void *concatenate(void *prog_list)
         memcpy(s, lstring_value(str_eval[i]), strlen(lstring_value(str_eval[i])));
         s+=strlen(lstring_value(str_eval[i]));
       } break;
-      default : ;     // already checked for, but make compiler happy
+      default: break;     // already checked for, but make compiler happy
     }
       }
       free(str_eval);
@@ -2348,11 +2353,23 @@ LObject *LSysFunction::EvalFunction(LList *arg_list)
             // A special test for gamma.lsp
             if (strcmp(st, "gamma.lsp") == 0)
             {
-                char *gammapath;
-                gammapath = (char *)malloc(strlen(get_save_filename_prefix()) + 9 + 1);
-                sprintf(gammapath, "%sgamma.lsp", get_save_filename_prefix());
+            	const size_t gammapathsize = 256;
+                char gammapath[gammapathsize];
+                snprintf(gammapath, gammapathsize, "%sgamma.lsp", get_save_filename_prefix());
                 fp = new jFILE(gammapath, "rb");
-                free(gammapath);
+            }
+            else if (strcmp(st, "english.lsp") == 0)
+            {
+            	// todo: extract locale info
+            	// todo: always load app bundled language files?
+                int locale = 0;
+                switch (locale)
+                {
+                default:
+                case 0:
+                	fp = new jFILE("english.lsp", "rb");
+                	break;
+                }
             }
             else
                 fp = new jFILE(st, "rb");
@@ -2383,8 +2400,9 @@ LObject *LSysFunction::EvalFunction(LList *arg_list)
             delete fp;
             char const *cs = s;
 #ifndef NO_LIBS
-            char msg[100];
-            sprintf(msg, "(load \"%s\")", st);
+            const size_t msgsize = 256;
+            char msg[msgsize];
+            snprintf(msg, msgsize, "(load \"%s\")", st);
             if (stat_man)
                 stat_man->push(msg, NULL);
             crc_manager.get_filenumber(st); // make sure this file gets crc'ed
@@ -2827,8 +2845,9 @@ LObject *LSysFunction::EvalFunction(LList *arg_list)
     }
     case SYS_FUNC_NUM2STR:
     {
-        char str[20];
-        sprintf(str, "%ld", (long int)lnumber_value(CAR(arg_list)->Eval()));
+    	const size_t strsize = 20;
+        char str[strsize];
+        snprintf(str, strsize, "%ld", (long int)lnumber_value(CAR(arg_list)->Eval()));
         ret = LString::Create(str);
         break;
     }

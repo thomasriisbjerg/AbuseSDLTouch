@@ -52,7 +52,7 @@ class file_manager
   remote_file *remote_list;
 
   int process_nfs_command(nfs_client *c);
-  void secure_filename(char *filename, char *mode);
+  void secure_filename(char *filename, const size_t filenamesize, char *mode, const size_t modesize);
   remote_file *find_rf(int fd);
   net_protocol *proto;
   public :

@@ -17,7 +17,8 @@
 class gui_status_node;
 class gui_status_manager : public status_manager
 {
-  char title[40];
+  static const size_t titlesize = 40;
+  char title[titlesize];
   int last_perc;
   public :
   gui_status_node *first;
@@ -26,7 +27,7 @@ class gui_status_manager : public status_manager
   virtual void update(int percentage);
   virtual void pop();
   void draw_bar(gui_status_node *whom, int perc);
-  void set_window_title(char const *name) { strncpy(title,name,39); }
+  void set_window_title(char const *name) { strncpy(title,name,titlesize-1); title[titlesize-1] = 0; }
   virtual void force_display();
 } ;
 

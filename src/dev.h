@@ -21,7 +21,8 @@ extern int confirm_quit();
 
 
 extern int scale_mult,scale_div;
-extern char level_file[100];
+const size_t levelfilesize = 100;
+extern char level_file[levelfilesize];
 extern image *small_render;
 
 void dev_init(int argc, char **argv);

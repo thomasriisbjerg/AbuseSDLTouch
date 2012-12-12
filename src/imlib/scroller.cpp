@@ -371,8 +371,9 @@ void scroller::scroll_event(int newx, image *screen)
   if (vert) { xa=0; ya=30; yo=m_pos.x+5; yo=m_pos.y+5; } else { xa=30; ya=0; xo=m_pos.x+5; yo=m_pos.y+5; }
   for (int i=newx,c=0; c<30 && i<100; i++,c++)
   {
-    char st[10];
-    sprintf(st,"%d",i);
+    const size_t stsize = 10;
+    char st[stsize];
+    snprintf(st,stsize,"%d",i);
     wm->font()->PutString(screen, ivec2(xo, yo), st, wm->bright_color());
     xo+=xa; yo+=ya;
   }
@@ -687,9 +688,9 @@ void spicker::handle_inside_event(Event &ev, image *screen, InputManager *inm)
 
 
 
-void spicker::handle_up(image *screen, InputManager *inm)
+void spicker::handle_decrease(image *screen, InputManager *inm)
 {
-  if (vert && cur_sel>0)
+  if (cur_sel>0)
   {
     cur_sel--;
 
@@ -704,9 +705,9 @@ void spicker::handle_up(image *screen, InputManager *inm)
   }
 }
 
-void spicker::handle_down(image *screen, InputManager *inm)
+void spicker::handle_increase(image *screen, InputManager *inm)
 {
-  if (vert && cur_sel<t-1)
+  if (cur_sel<t-1)
     cur_sel++;
   else return ;
   if (cur_sel>sx+r-1)
@@ -719,12 +720,28 @@ void spicker::handle_down(image *screen, InputManager *inm)
   note_new_current(screen,inm,cur_sel);
 }
 
+void spicker::handle_up(image *screen, InputManager *inm)
+{
+  if (vert)
+    handle_decrease(screen, inm);
+}
+
+void spicker::handle_down(image *screen, InputManager *inm)
+{
+  if (vert)
+    handle_increase(screen, inm);
+}
+
 void spicker::handle_left(image *screen, InputManager *inm)
 {
+  if (!vert)
+    handle_decrease(screen, inm);
 }
 
 void spicker::handle_right(image *screen, InputManager *inm)
 {
+  if (!vert)
+    handle_increase(screen, inm);
 }
 
 

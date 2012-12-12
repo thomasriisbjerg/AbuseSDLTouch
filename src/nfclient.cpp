@@ -122,8 +122,9 @@ nfs_file::nfs_file(char const *filename, char const *mode)
   }
   else
   {
-    char nm[256];
-    strcpy(nm,filename);
+    const size_t nmsize = 256;
+    char nm[nmsize];
+    strncpy(nm,filename,nmsize-1); nm[nmsize-1] = 0;
     nfs_fd=NF_open_file(nm,mode);
     if (nfs_fd==-2)
     {

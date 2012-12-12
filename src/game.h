@@ -74,9 +74,14 @@ private:
       morph_bright_color,morph_med_color,morph_dark_color;
 
   int32_t last_time,fps;
-  char mapname[100],command[200],help_text[200];
+  static const size_t mapnamesize = 100;
+  static const size_t commandsize = 200;
+  static const size_t helptextsize = 200;
+  char mapname[mapnamesize];
+  char command[commandsize];
+  char help_text[helptextsize];
   int refresh,mousex,mousey,help_text_frames;
-  int has_joystick,no_delay;
+  int no_delay;
 
 
   Jwindow *top_menu,*joy_win,*last_input;
@@ -86,7 +91,7 @@ private:
 public :
   int key_down(int key) { return keymap[key/8]&(1<<(key%8)); }
   void set_key_down(int key, int x) { if (x) keymap[key/8]|=(1<<(key%8)); else keymap[key/8]&=~(1<<(key%8)); }
-  void reset_keymap() { memset(keymap,0,sizeof(keymap)); }
+  void reset_keymap();
 
   int nplayers;
   view *first_view,*old_view;

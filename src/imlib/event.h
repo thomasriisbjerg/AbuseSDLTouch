@@ -21,6 +21,8 @@
 #define EV_CLOSE_WINDOW 256
 #define EV_DRAG_WINDOW  512
 #define EV_MESSAGE     1024
+#define EV_AIM_X		2048
+#define EV_AIM_Y		4096
 
 #define LEFT_BUTTON    1
 #define RIGHT_BUTTON   2
@@ -63,10 +65,7 @@ public:
     EventHandler(image *screen, palette *pal);
     ~EventHandler();
 
-    void Push(Event *ev)
-    {
-        m_events.add_end(ev);
-    }
+    void Push(Event *ev);
 
     void SysInit();
     void SysWarpMouse(ivec2 pos);
@@ -76,7 +75,8 @@ public:
     void Get(Event &ev);
   void flush_screen();
 
-  int has_mouse() { return 1; }
+  int has_mouse();
+  int mouse_visible();
     void SetMouseShape(image *im, ivec2 center)
     {
         m_sprite->SetVisual(im, 1);
@@ -88,6 +88,7 @@ public:
                       Min(Max(pos.y, 0), m_screen->Size().y - 1));
         SysWarpMouse(m_pos);
     }
+    void reset_keymap();
 
 private:
     linked_list m_events;

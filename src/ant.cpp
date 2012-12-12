@@ -456,21 +456,22 @@ void show_stats()
     int x1=im->Size().x+1,y1=0,x2=xres,y2=main_screen->Size().y;
     fade_in(NULL,16);
 
-    char name[50];
-    strcpy(name,current_level->original_name());
+    const size_t namesize = 50;
+    char name[namesize];
+    strncpy(name,current_level->original_name(),namesize-1); name[namesize-1] = 0;
     char dig1=name[strlen(name)-strlen(".spe")-2];
     char dig2=name[strlen(name)-strlen(".spe")-1];
 
-
-    char msg[50];
+    const size_t msgsize = 50;
+    char msg[msgsize];
 
     if (isdigit(dig1) && isdigit(dig2))
     {
       if (dig1!='0')
-        sprintf(msg,"%s : %c%c",symbol_str("lev_complete"),dig1,dig2);
+        snprintf(msg,msgsize,"%s : %c%c",symbol_str("lev_complete"),dig1,dig2);
       else
-        sprintf(msg,"%s : %c",symbol_str("lev_complete"),dig2);
-    } else sprintf(msg,"%s : %s",symbol_str("lev_complete"),current_level->original_name());
+        snprintf(msg,msgsize,"%s : %c",symbol_str("lev_complete"),dig2);
+    } else snprintf(msg,msgsize,"%s : %s",symbol_str("lev_complete"),current_level->original_name());
 
     int w = wm->font()->Size().x * strlen(msg),
         h = wm->font()->Size().y;

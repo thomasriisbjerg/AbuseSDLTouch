@@ -18,6 +18,8 @@
 
 #include "input.h"
 
+extern int has_multitouch;
+
 void button::remap(Filter *f)
 {
   if (visual)
@@ -347,8 +349,9 @@ text_field::text_field(int X, int Y, int ID, char const *Prompt,
 text_field::text_field(int X, int Y, int ID, char const *Prompt,
                        char const *Format, double Data, ifield *Next)
 {
-  char num[20];
-  sprintf(num,"%g",Data);
+  const size_t numsize = 20;
+  char num[numsize];
+  snprintf(num,numsize,"%g",Data);
   int slen=(strlen(Format)>strlen(num) ? strlen(Format) : strlen(num));
   m_pos = ivec2(X, Y); id=ID;
   prompt = strdup(Prompt);
@@ -365,11 +368,9 @@ void button::push()
 
 void button::handle_event(Event &ev, image *screen, InputManager *im)
 {
-  if ((ev.type==EV_KEY && ev.key==13) || (ev.type==EV_MOUSE_BUTTON &&
-                                         ev.mouse_button))
+  if ((ev.type==EV_KEY && ev.key==JK_ENTER) || (ev.type==EV_MOUSE_BUTTON && // THOMASR
+		  bool(ev.mouse_button) != bool(has_multitouch)))
   {
-    int  x1,y1,x2,y2;
-    area(x1,y1,x2,y2);
     up=!up;
     draw_first(screen);
     draw(act,screen);

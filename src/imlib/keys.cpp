@@ -26,21 +26,33 @@ char const *jk_key_names[]=
     "F7","F8","F9","F10","Insert","PageUp","PageDown","Command"
 };
 
-void key_name(int key, char *buffer)
+void key_name(int key, char *buffer, const size_t buffersize)
 {
     //static char sing[2];
     if( key > 255 && key <= JK_MAX_KEY )
-        strcpy(buffer,jk_key_names[key-256]);
+    {
+        strncpy(buffer,jk_key_names[key-256], buffersize-1); buffer[buffersize-1] = 0;
+    }
     else if( key == JK_BACKSPACE )
-        strcpy(buffer,"Backspace");
+    {
+        strncpy(buffer,"Backspace", buffersize-1); buffer[buffersize-1] = 0;
+    }
     else if( key == JK_TAB )
-        strcpy(buffer,"Tab");
+    {
+        strncpy(buffer,"Tab", buffersize-1); buffer[buffersize-1] = 0;
+    }
     else if( key == JK_ENTER )
-        strcpy(buffer,"Enter");
+    {
+        strncpy(buffer,"Enter", buffersize-1); buffer[buffersize-1] = 0;
+    }
     else if( key == JK_ESC )
-        strcpy(buffer,"Esc");
+    {
+        strncpy(buffer,"Esc", buffersize-1); buffer[buffersize-1] = 0;
+    }
     else if( key == JK_SPACE )
-        strcpy( buffer, "Space" );
+    {
+        strncpy( buffer, "Space", buffersize-1); buffer[buffersize-1] = 0;
+    }
     else if( isprint(key) )
     {
         buffer[0] = key;

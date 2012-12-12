@@ -21,6 +21,7 @@
 #include "cache.h"
 #include "timing.h"
 #include "light.h"
+#include "loader2.h"
 
 #include "dev.h"
 
@@ -28,15 +29,14 @@
 
 extern char *get_login();
 net_configuration *main_net_cfg = NULL;
-extern char lsf[256];
 
 extern net_protocol *prot;
 
 net_configuration::net_configuration()
 {
-  strcpy(name,get_login());
+  strncpy(name, get_login(), namesize);
 
-  strcpy(server_name,"My Netgame");
+  strncpy(server_name, "My Netgame", servernamesize);
 
   min_players=2;
   max_players=8;
@@ -107,7 +107,7 @@ int net_configuration::confirm_inputs(InputManager *i, int server)
 
     char *nm=i->get(NET_NAME)->read();
     if (strstr(nm,"\"")) {  error(symbol_str("name_error")); return 0; }
-    strcpy(name,nm);
+    strncpy(name, nm, namesize);
 
     min_players=((ifield *)(i->get(NET_MIN)->read()))->id-MIN_1+1;
     max_players=((ifield *)(i->get(NET_MAX)->read()))->id-MAX_2+2;
@@ -116,29 +116,31 @@ int net_configuration::confirm_inputs(InputManager *i, int server)
     char *s_nm=i->get(NET_SERVER_NAME)->read();
     if (strstr(s_nm,"\"")) {  error(symbol_str("game_error")); return 0; }
 
-    strcpy(game_name,s_nm);
+    strncpy(game_name, s_nm, sizeof(game_name)/sizeof(game_name[0]));
 
     bFILE *fp=open_file("addon/deathmat/gamename.lsp","wb");
     if (!fp->open_failure())
     {
-      char str[100];
-      sprintf(str,"(setq gamename \"%s\")\n",game_name);
+      const size_t strsize = 100;
+      char str[strsize];
+      snprintf(str, strsize, "(setq gamename \"%s\")\n", game_name);
       fp->write(str,strlen(str)+1);
     }
     delete fp;
-    strcpy(lsf,"addon/deathmat/deathmat.lsp");
+    strncpy(lsf,"addon/deathmat/deathmat.lsp",lsfsize-1); lsf[lsfsize-1] = 0;
 
 
     fp=open_file("addon/deathmat/levelset.lsp","wb");
     if (!fp->open_failure())
     {
-      char str[100];
+      const size_t strsize = 100;
+      char str[strsize];
       if (((ifield *)(i->get(LEVEL_BOX)->read()))->id==LVL_2)
-        sprintf(str,"(load \"addon/deathmat/small.lsp\")\n");
+        snprintf(str,strsize,"(load \"addon/deathmat/small.lsp\")\n");
       else if (((ifield *)(i->get(LEVEL_BOX)->read()))->id==LVL_4)
-        sprintf(str,"(load \"addon/deathmat/medium.lsp\")\n");
+        snprintf(str,strsize,"(load \"addon/deathmat/medium.lsp\")\n");
       else
-        sprintf(str,"(load \"addon/deathmat/large.lsp\")\n");
+        snprintf(str,strsize,"(load \"addon/deathmat/large.lsp\")\n");
       fp->write(str,strlen(str)+1);
     }
     delete fp;
@@ -149,14 +151,15 @@ int net_configuration::confirm_inputs(InputManager *i, int server)
   } else  {
     char *nm=i->get(NET_NAME)->read();
     if (strstr(nm,"\"")) {  error(symbol_str("name_error")); return 0; }
-    strcpy(name,nm);
+    strncpy(name,nm,namesize);
   }
 
   bFILE *fp=open_file("addon/deathmat/username.lsp","wb");
   if (!fp->open_failure())
   {
-    char str[100];
-    sprintf(str,"(setq username \"%s\")\n",name);
+    const size_t strsize = 100;
+    char str[strsize];
+    snprintf(str,strsize,"(setq username \"%s\")\n",name);
     fp->write(str,strlen(str)+1);
   }
   delete fp;
@@ -430,7 +433,7 @@ int net_configuration::get_options(int server)
           { ret=1; done=1; }
           else { ((button *)inm.get(NET_OK))->push(); inm.redraw(); }
           } break;
-      case NET_CANCEL : done=1;
+      case NET_CANCEL : done=1; break;
     }
       } if (ev.type==EV_KEY && ev.key==JK_ESC) done=1;
 
@@ -499,6 +502,7 @@ int net_configuration::input()   // pulls up dialog box and input fileds
                 join_game=ev.message.id-NET_GAME;
                 done=1;
               }
+              break;
           }
         }
         else if (ev.type==EV_KEY && ev.key==JK_ESC )
@@ -586,7 +590,7 @@ int net_configuration::input()   // pulls up dialog box and input fileds
       state=RESTART_SINGLE;
       start_running=0;
 
-      strcpy(lsf,"abuse.lsp");
+      strncpy(lsf,"abuse.lsp",lsfsize-1); lsf[lsfsize-1] = 0;
       return 1;
     }
   }

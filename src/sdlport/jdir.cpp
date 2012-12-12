@@ -44,8 +44,9 @@ void get_directory(char *path, char **&files, int &tfiles, char **&dirs, int &td
 
     char **tlist = NULL;
     int t = 0;
-    char curdir[200];
-    getcwd( curdir, 200 );
+    const size_t curdirsize = 256;
+    char curdir[curdirsize];
+    getcwd( curdir, curdirsize );
     chdir( path );
 
     do

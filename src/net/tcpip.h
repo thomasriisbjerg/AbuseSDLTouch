@@ -27,7 +27,7 @@
 #   include <string.h>
 #   include <sys/time.h>
 #   include <sys/ipc.h>
-#   include <sys/shm.h>
+//#   include <sys/shm.h>
 #   include <sys/socket.h>
 #   include <unistd.h>
 #   ifdef HAVE_BSTRING_H
@@ -36,6 +36,8 @@
 #       include <sys/select.h>
 #   endif
 #endif
+
+#   include <sys/socket.h>
 
 #include "sock.h"
 #include "isllist.h"
@@ -72,9 +74,10 @@ public:
   void store_string(char *st, int st_length)
   //{ {{
   {
-    char buf[100];
+    const size_t bufsize = 100;
+    char buf[bufsize];
     unsigned char *c=(unsigned char *) (&addr.sin_addr.s_addr);
-    sprintf(buf,"%d.%d.%d.%d:%d",c[0],c[1],c[2],c[3],htons(addr.sin_port));
+    snprintf(buf,bufsize,"%d.%d.%d.%d:%d",c[0],c[1],c[2],c[3],htons(addr.sin_port));
     strncpy(st,buf,st_length);
     st[st_length-1]=0;
   }

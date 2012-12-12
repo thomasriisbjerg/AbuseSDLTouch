@@ -18,6 +18,7 @@
 #include "common.h"
 
 #include "sdlport/joy.h"
+#include "sdlport/setup.h"
 
 #include "ant.h"
 #include "lisp.h"
@@ -42,6 +43,7 @@
 #define ENGINE_MINOR 20
 
 extern int has_joystick;
+extern int has_multitouch;
 
 // the following are references to lisp symbols
 LSymbol *l_chat_input, *l_post_render;
@@ -70,7 +72,8 @@ void *l_main_menu, *l_logo,*l_state_art,*l_abilities,*l_state_sfx,
      *l_level_loaded;        // called when a new level is loaded
 
 
-char game_name[50];
+const size_t gamenamesize = 50;
+char game_name[gamenamesize];
 void *sensor_ai();
 
 // variables for the status bar
@@ -482,6 +485,7 @@ void clisp_init()                            // call by lisp_init, defines symbo
   add_c_bool_fun("draw_bar",5,5,              282);  // x1,y1,x2,y2,color
   add_c_bool_fun("draw_rect",5,5,             283);  // x1,y1,x2,y2,color
   add_c_bool_fun("get_option",1,1,            284);
+  add_c_function("get_key_binding", 1, 2,     285);  // name of binding, player index
   add_c_bool_fun("set_delay_on",1,1,          288);  // T or nil
   add_c_bool_fun("set_login",1,1,             289);  // name
   add_c_bool_fun("enable_chatting",0,0,       290);
@@ -491,6 +495,9 @@ void clisp_init()                            // call by lisp_init, defines symbo
   add_c_bool_fun("reset_kills",0,0,           294);
   add_c_bool_fun("set_game_name",1,1,         295);  // server game name
   add_c_bool_fun("set_net_min_players",1,1,   296);
+	
+  add_c_bool_fun("has_joystick",0,0,          500);
+  add_c_bool_fun("has_multitouch",0,0,        501);
 
   add_c_bool_fun("set_object_tint", 1, 1,    1001);  // set_object_tint
   add_c_function("get_object_tint", 0, 0,    1002);  // get_object_tint
@@ -862,8 +869,9 @@ void *l_caller(long number, void *args)
     } break;
     case 45 :
     {
-      char nm[50];
-      sprintf(nm,"save%04d.pcx", load_game(1,symbol_str("LOAD")));
+      const size_t nmsize = 50;
+      char nm[nmsize];
+      snprintf(nm,nmsize,"save%04d.pcx", load_game(1,symbol_str("LOAD")));
 //      get_savegame_name(nm);
       the_game->reset_keymap();
       return LString::Create(nm);
@@ -1009,8 +1017,10 @@ void *l_caller(long number, void *args)
     } break;
     case 64 :
     {
-      char name[256],name2[256];
-      strcpy(name,lstring_value(CAR(args)->Eval()));  args=CDR(args);
+      const size_t namesize = 256;
+      const size_t name2size = 256;
+      char name[namesize],name2[name2size];
+      strncpy(name,lstring_value(CAR(args)->Eval()), namesize);  args=CDR(args);
       long first=lnumber_value(CAR(args)->Eval());  args=CDR(args);
       long last=lnumber_value(CAR(args)->Eval());
       long i;
@@ -1021,14 +1031,14 @@ void *l_caller(long number, void *args)
       {
         for (i=last; i>=first; i--)
         {
-          sprintf(name2,"%s%04ld.pcx",name,i);
+          snprintf(name2,name2size,"%s%04ld.pcx",name,i);
           push_onto_list(LString::Create(name2),ret);
         }
       } else
       {
         for (i=last; i<=first; i++)
         {
-          sprintf(name2,"%s%04ld.pcx",name,i);
+          snprintf(name2,name2size,"%s%04ld.pcx",name,i);
           push_onto_list(LString::Create(name2),ret);
         }
       }
@@ -1093,8 +1103,9 @@ long c_caller(long number, void *args)
         {
 /*      if (rcheck_lp)
       {
-    char str[100];
-    sprintf(str,"\n\nTick %d, Rand_on %d\n",current_level->tick_counter(),rand_on);
+    const size_t strsize = 100;
+    char str[strsize];
+    snprintf(str,strsize,"\n\nTick %d, Rand_on %d\n",current_level->tick_counter(),rand_on);
     rcheck_lp->write(str,strlen(str)+1);
     current_print_file=rcheck_lp;
     print_trace_stack(6);
@@ -1366,13 +1377,13 @@ long c_caller(long number, void *args)
       LSymbol *sym=NULL;
       if (CDR(args))
       {
-    sym=(LSymbol *)lcar(args);
-    if (item_type(sym)!=L_SYMBOL)
-    {
-      lbreak("expecting first arg to def-character to be a symbol!\n");
-      exit(0);
-    }
-    args=CDR(args);
+        sym=(LSymbol *)lcar(args);
+        if (item_type(sym)!=L_SYMBOL)
+        {
+          lbreak("expecting first arg to def-character to be a symbol!\n");
+          exit(0);
+        }
+        args=CDR(args);
       }
 
       LSpace *sp = LSpace::Current;
@@ -1886,21 +1897,22 @@ long c_caller(long number, void *args)
     } break;
     case 225 :
     {
-      char fn[255];
+      const size_t fnsize = 256;
+      char fn[fnsize];
       // If a save filename is requested, prepend the savegame directory.
       if( strncmp( lstring_value( CAR(args) ), "save", 4 ) == 0 )
       {
-        sprintf( fn, "%s%s", get_save_filename_prefix(), lstring_value( CAR(args) ) );
+        snprintf( fn, fnsize, "%s%s", get_save_filename_prefix(), lstring_value( CAR(args) ) );
       }
       else
       {
-        strcpy( fn, lstring_value(CAR(args)) );
+        strncpy( fn, lstring_value(CAR(args)), fnsize );
       }
       the_game->request_level_load(fn);
     } break;
     case 226 :
     {
-      strcpy(level_file,lstring_value(CAR(args)));
+      strncpy(level_file,lstring_value(CAR(args)),levelfilesize-1); level_file[levelfilesize-1] = 0;
     } break;
     case 227 :
     {
@@ -2170,6 +2182,14 @@ long c_caller(long number, void *args)
     {
       return get_keycode(lstring_value(CAR(args)));
     }
+    case 285:
+    {
+    	const char *name = lstring_value(CAR(args));
+    	int player = 0;
+    	if (args)
+    		player = lnumber_value(CAR(args));
+    	return get_key_binding(name, player);
+    }
     case 275 :
     {
       int id=lnumber_value(CAR(args));  args=CDR(args);
@@ -2228,6 +2248,7 @@ long c_caller(long number, void *args)
         return 1;
       else return 0;
     } break;
+    //case 285 is defined above
     case 288 :
     {
       if (CAR(args)) the_game->set_delay(1); else the_game->set_delay(0);
@@ -2281,8 +2302,8 @@ long c_caller(long number, void *args)
     } break;
     case 295 :
     {
-      strncpy(game_name,lstring_value(CAR(args)),sizeof(game_name));
-      game_name[sizeof(game_name)-1]=0;
+      strncpy(game_name,lstring_value(CAR(args)),gamenamesize);
+      game_name[gamenamesize-1]=0;
 
     } break;
     case 296 :
@@ -2290,6 +2311,10 @@ long c_caller(long number, void *args)
       if (main_net_cfg)
         main_net_cfg->min_players=lnumber_value(CAR(args));
     } break;
+    case 500:
+			return has_joystick;
+    case 501:
+			return has_multitouch;
     case 1001: // (set_object_tint)
       if(current_object->Controller)
         current_object->Controller->set_tint(lnumber_value(CAR(args)));

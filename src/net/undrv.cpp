@@ -75,8 +75,9 @@ int kill_old_driver(int argc, char **argv)
     if (fscanf(fp,"%d",&pid)==1)
     {
       struct stat st;
-      char proc_path[50];
-      sprintf(proc_path,"/proc/%d",pid);
+      const size_t proc_pathsize = 50;
+      char proc_path[proc_pathsize];
+      snprintf(proc_path,proc_pathsize,"/proc/%d",pid);
       if (!stat(proc_path,&st))
       {
     fprintf(stderr,"net driver : warning, %s already running, attempting to kill...\n",argv[0]);

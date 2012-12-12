@@ -36,6 +36,7 @@
 #include "loadgame.h"
 #include "scroller.h"
 #include "netcfg.h"
+#include "director.h"
 
 #include "net/sock.h"
 
@@ -358,6 +359,54 @@ void save_difficulty()
 void fade_out(int steps);
 void fade_in(image *im, int steps);
 
+void scroll_text_file(const char *filename)
+{
+	// if file exists
+    bFILE *fp = open_file(filename, "r");
+    if(!fp->open_failure())
+    {
+    	size_t size = fp->file_size();
+		char *buffer = (char *)malloc(size + 1);
+		if (buffer)
+		{
+		    // read file
+			fp->read(buffer, size);
+			buffer[size] = 0;
+
+			uint8_t cmap[32];
+			for(int i = 0; i < 32; i++)
+                cmap[i] = pal->find_closest(i * 256 / 32, i * 256 / 32, i * 256 / 32);
+
+			// while !quit
+			int step = 0;
+			int done = 0;
+			Event ev;
+			ev.type = EV_SPURIOUS;
+			do
+			{
+				// scroll text across screen
+				main_screen->clear();
+				done = text_draw(yres - (step++ / 2), 15, 0, xres - 15, yres, buffer, wm->font(), cmap, wm->bright_color(), false);
+
+                wm->flush_screen();
+                while (wm->IsPending())
+                {
+                    wm->get_event(ev);
+                    if (ev.type==EV_KEY || (ev.type==EV_MOUSE_BUTTON && ev.mouse_button))
+                    	done = true;
+                }
+            } while (!done);
+
+			// fade out
+	    	fade_out(16);
+	    	free(buffer);
+		}
+    }
+    else
+    {
+    	printf("Did not find sfx/LICENSES, skipping");
+    }
+}
 
 void show_sell(int abortable)
 {
@@ -368,7 +417,8 @@ void show_sell(int abortable)
     LSpace::Current = &LSpace::Perm;
 //    char *prog="((\"art/help.spe\" . \"sell2\")(\"art/help.spe\" . \"sell4\")(\"art/help.spe\" . \"sell3\")(\"art/fore/endgame.spe\" . \"credit\"))";
 //    char *prog="((\"art/fore/endgame.spe\" . \"credit\") (\"art/help.spe\" . \"sell6\"))";
-    char const *prog = "((\"art/fore/endgame.spe\" . \"credit\"))";
+///    char const *prog = "((\"art/fore/endgame.spe\" . \"credit\"))"; // THOMASR commented out
+    char const *prog = "((\"art/endgame.spe\" . \"credit\"))"; // THOMASR from original AbuseSrc
     ss->SetValue(LObject::Compile(prog));
     LSpace::Current = sp;
   }
@@ -389,12 +439,16 @@ void show_sell(int abortable)
       do
       { wm->flush_screen();
     wm->get_event(ev);
-      } while (ev.type!=EV_KEY);
+      } while (ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON);
       if (ev.key==JK_ESC && abortable)
         quit=1;
       fade_out(16);
       tmp = (LObject *)CDR(tmp);
     }
+
+    scroll_text_file("AUTHORS");
+    scroll_text_file("sfx/LICENSES");
+
     wm->SetMouseShape(cache.img(c_normal)->copy(), ivec2(1, 1));
   }
 }
@@ -438,8 +492,9 @@ void menu_handler(Event &ev, InputManager *inm)
       the_game->reset_keymap();
       if (got_level)
       {
-        char name[255];
-        sprintf(name,"%ssave%04d.spe", get_save_filename_prefix(), got_level);
+        const size_t namesize = 256;
+        char name[namesize];
+        snprintf(name,namesize,"%ssave%04d.spe", get_save_filename_prefix(), got_level);
 
         the_game->load_level(name);
         the_game->set_state(RUN_STATE);
@@ -516,21 +571,26 @@ void *current_demo=NULL;
 
 static ico_button *load_icon(int num, int id, int x, int y, int &h, ifield *next, char const *key)
 {
-  char name[20];
+  const size_t namesize = 20;
+  char name[namesize];
   char const *base = "newi";
-  int a,b,c;
-  sprintf(name,"%s%04d.pcx",base,num*3+1);
-  a=cache.reg("art/icons.spe",name,SPEC_IMAGE,1);
+  int da,u,ua;
 
-  sprintf(name,"%s%04d.pcx",base,num*3+2);
-  b=cache.reg("art/icons.spe",name,SPEC_IMAGE,1);
+  // active down
+  snprintf(name,namesize,"%s%04d.pcx",base,num*3+1);
+  da=cache.reg("art/icons.spe",name,SPEC_IMAGE,1);
 
-  sprintf(name,"%s%04d.pcx",base,num*3+3);
-  c=cache.reg("art/icons.spe",name,SPEC_IMAGE,1);
+  // inactive up
+  snprintf(name,namesize,"%s%04d.pcx",base,num*3+2);
+  u=cache.reg("art/icons.spe",name,SPEC_IMAGE,1);
 
-  h=cache.img(a)->Size().y;
+  // active up
+  snprintf(name,namesize,"%s%04d.pcx",base,num*3+3);
+  ua=cache.reg("art/icons.spe",name,SPEC_IMAGE,1);
 
-  return new ico_button(x,y,id,b,b,a,c,next,-1,key);
+  h=cache.img(da)->Size().y;
+
+  return new ico_button(x,y,id,u,u,ua,da,next,-1,key);
 }
 
 ico_button *make_default_buttons(int x,int &y, ico_button *append_list)
@@ -636,8 +696,13 @@ void main_menu()
     list=make_default_buttons(xres-33,y,list);
 
     InputManager *inm=new InputManager(main_screen,list);
-    inm->allow_no_selections();
-    inm->clear_current();
+    extern int has_joystick;
+
+    if (!has_joystick)
+    {
+        inm->allow_no_selections();
+        inm->clear_current();
+    }
 
     main_screen->AddDirty(ivec2(0), ivec2(320, 200));
 

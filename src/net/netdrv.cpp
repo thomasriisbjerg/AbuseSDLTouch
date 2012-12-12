@@ -441,7 +441,7 @@ int net_driver::check_commands()
     }
       } break;
       default :
-      { fprintf(stderr,"net driver : unknown net command %d\n",cmd); die(0); }
+      { fprintf(stderr,"net driver : unknown net command %d\n",cmd); die(0); } break;
     }
     ret=1;
   }

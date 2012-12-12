@@ -11,8 +11,11 @@
 #ifndef __SOUND_H__
 #define __SOUND_H__
 
-#if !defined __CELLOS_LV2__
-#   include <SDL/SDL_mixer.h>
+#if defined __APPLE__
+#	include <SDL_mixer/SDL_mixer.h>
+#elif !defined __CELLOS_LV2__
+//#   include <SDL/SDL_mixer.h>
+#   include <SDL_mixer.h>
 #endif
 
 /* options are passed via command line */

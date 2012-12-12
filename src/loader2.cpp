@@ -281,7 +281,7 @@ void load_tiles(Cell *file_list)
 
 
 extern unsigned char fnt6x13[192*104];
-char lsf[256]="abuse.lsp";
+char lsf[lsfsize]="abuse.lsp";
 
 void load_data(int argc, char **argv)
 {
@@ -321,13 +321,13 @@ void load_data(int argc, char **argv)
     {
       if (!strcmp(argv[i],"-lsf"))
       {
-    i++;
-    strcpy(lsf,argv[i]);
+        i++;
+        strncpy(lsf,argv[i],lsfsize-1); lsf[lsfsize-1] = 0;
       }
       if (!strcmp(argv[i],"-a"))
       {
-    i++;
-    snprintf(lsf, sizeof(lsf), "addon/%s/%s.lsp", argv[i], argv[i]);
+        i++;
+        snprintf(lsf, sizeof(lsf), "addon/%s/%s.lsp", argv[i], argv[i]);
       }
     }
   }

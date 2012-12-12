@@ -378,8 +378,9 @@ CharacterType::CharacterType(LList *args, LSymbol *name)
         {
             LObject *l=CDR(CAR(field));
             PtrRef r4(l);
-            char fn[100];
-            strcpy(fn,lstring_value(CAR(l)->Eval())); l=CDR(l);
+            const size_t fnsize = 100;
+            char fn[fnsize];
+            strncpy(fn,lstring_value(CAR(l)->Eval()),fnsize-1); fn[fnsize-1] = 0; l=CDR(l);
             while (l)
             {
                 int index;

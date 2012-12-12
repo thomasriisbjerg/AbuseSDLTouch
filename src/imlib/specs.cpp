@@ -59,7 +59,8 @@ char const *spec_types[] =
 
 
 int total_files_open=0;
-char spec_main_file[100];
+static const size_t specmainfilesize = 100;
+char spec_main_file[specmainfilesize];
 
 static char *spec_prefix=NULL;
 static char *save_spec_prefix=NULL;
@@ -109,7 +110,7 @@ void set_save_filename_prefix(char const *save_prefix)
     {
         int len = strlen( save_prefix );
         save_spec_prefix = (char *)malloc( len + 1 );
-        strcpy( save_spec_prefix, save_prefix );
+        strncpy( save_spec_prefix, save_prefix, len ); save_spec_prefix[len] = 0;
 /* AK - Commented this out as it may cause problems
         if( save_prefix[len - 1] != '\\' && save_prefix[len - 1] != '/' )
         {
@@ -264,7 +265,7 @@ int bFILE::allow_write_buffering() { return 1; }
 void set_spec_main_file(char const *filename, int Search_order)
 {
   dprintf("Specs : main file set to %s\n",filename);
-  strcpy(spec_main_file,filename);
+  strncpy(spec_main_file,filename,specmainfilesize-1); spec_main_file[specmainfilesize-1] = 0;
   search_order=Search_order;
 
 #if (defined(__APPLE__) && !defined(__MACH__))
@@ -290,10 +291,11 @@ jFILE::jFILE(FILE *file_pointer)                       // assumes fp is at begin
 void jFILE::open_external(char const *filename, char const *mode, int flags)
 {
   int skip_size=0;
-  char tmp_name[200];
+  const size_t tmpnamesize = 256;
+  char tmp_name[tmpnamesize];
   if (spec_prefix && filename[0] != '/')
-    sprintf(tmp_name,"%s%s",spec_prefix,filename);
-  else strcpy(tmp_name,filename);
+    snprintf(tmp_name,tmpnamesize,"%s%s",spec_prefix,filename);
+  else strncpy(tmp_name,filename,tmpnamesize);
 
 //  int old_mask=umask(S_IRWXU | S_IRWXG | S_IRWXO);
   if (flags&O_WRONLY)
@@ -685,8 +687,9 @@ void spec_directory::print()
 
 void spec_directory::startup(bFILE *fp)
 {
-  char buf[256];
-  memset(buf,0,256);
+  const size_t bufsize = 256;
+  char buf[bufsize];
+  memset(buf,0,bufsize);
   fp->read(buf,8);
   buf[9]=0;
   size=0;
@@ -810,7 +813,7 @@ int spec_directory::write(bFILE *fp)
   unsigned char flags=0;
   unsigned long offset,data_size;
   spec_entry **e;
-  strcpy(sig,SPEC_SIGNATURE);
+  strncpy(sig,SPEC_SIGNATURE,SPEC_SIG_SIZE-1); sig[SPEC_SIG_SIZE-1] = 0;
 
   if (fp->write(sig,sizeof(sig))!=sizeof(sig))    return 0;
   fp->write_uint16(total);

@@ -14,6 +14,8 @@
 #include "light.h"
 #include "jwindow.h"
 
+const int SHIFT_DOWN_DEFAULT = 24;
+const int SHIFT_RIGHT_DEFAULT = 0;
 
 class object_node;
 class game_object;
@@ -42,7 +44,8 @@ public:
   void reset_keymap() { memset(m_keymap,0,sizeof(m_keymap)); }
   void add_chat_key(int key);
 
-  char name[100];
+  static const size_t namesize = 100;
+  char name[namesize];
   struct suggest_struct suggest;
 
   int god;                                // :) if you believe in such things
@@ -64,7 +67,9 @@ public:
       b4_suggestion,
       pointer_x,
       pointer_y,
-      freeze_time;
+      freeze_time,
+	  aim_x,
+	  aim_y;
 
 
   short ambient;                        // ambient lighting setting, used by draw

@@ -56,9 +56,10 @@ void text_status_manager::update(int percentage)
 //    return;
   if (level==1 && percentage-first->last_update>4)
   {
-      char s[256], len;
+    const size_t ssize = 256;
+    char s[ssize], len;
     first->last_update=percentage;
-    sprintf(s,"\r%s [",first->name);
+    snprintf(s,ssize,"\r%s [",first->name);
     len = strlen(s);
     int t=percentage*40/100;
     int i=0;

@@ -161,17 +161,18 @@ void console::put_char(char ch)
       cx++;
       if (cx>=w) do_cr(); else
       if (con_win) draw_cursor();
-    }
+    } break;
   }
 }
 
 
 void console::print_f( const char *format, ...)
 {
-  char st[300];
+  const size_t stsize = 300;
+  char st[stsize];
   va_list ap;
   va_start(ap, format);
-  vsprintf(st,format,ap);
+  vsnprintf(st,stsize,format,ap);
   va_end(ap);
   put_string(st);
 }

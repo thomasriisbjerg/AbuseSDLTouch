@@ -27,6 +27,9 @@
 #include "event.h"
 #include "video.h"
 #include "filter.h"
+#include "../sdlport/setup.h"
+
+extern flags_struct flags;
 
 //
 // Constructor
@@ -76,6 +79,12 @@ EventHandler::~EventHandler()
     ;
 }
 
+void EventHandler::Push(Event *ev)
+    {
+        m_events.add_end(ev);
+        m_pending = 1;
+    }
+
 void EventHandler::Get(Event &ev)
 {
     // Sleep until there are events available
@@ -112,3 +121,12 @@ void EventHandler::flush_screen()
     update_dirty(main_screen);
 }
 
+int EventHandler::has_mouse()
+{
+	return 1;
+}
+
+int EventHandler::mouse_visible()
+{
+	return flags.hidemouse ? 0 : 1;
+}

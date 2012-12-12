@@ -49,7 +49,7 @@
 #define JK_MAX_KEY  284
 
 // returns a ASCII string describing a key, i.e. "Up Arrow"
-void key_name(int key, char *buffer);
+void key_name(int key, char *buffer, const size_t buffersize);
 
 // returns a value describing a key name
 int key_value(char const *buffer);

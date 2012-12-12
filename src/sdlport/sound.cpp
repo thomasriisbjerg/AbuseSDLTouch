@@ -170,9 +170,9 @@ song::song(char const * filename)
     rw = NULL;
     music = NULL;
 
-    char realname[255];
-    strcpy(realname, get_filename_prefix());
-    strcat(realname, filename);
+    const size_t realnamesize = 255;
+    char realname[realnamesize];
+    snprintf(realname, realnamesize, "%s%s", get_filename_prefix(), filename);
 
     uint32_t data_size;
     data = load_hmi(realname, data_size);

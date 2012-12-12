@@ -386,8 +386,9 @@ int open_file(char *&filename, char *mode)
 {
   if (filename[0]!='/' && filename[1]!='/' && default_fs_name[0])   // default file server?
   {
-    char tmp_fn[500];
-    sprintf(tmp_fn,"//%s/%s",default_fs_name,filename);
+	const size_t tmp_fnsize = 500;
+    char tmp_fn[tmp_fnsize];
+    snprintf(tmp_fn,tmp_fnsize,"//%s/%s",default_fs_name,filename);
     strcpy(filename,tmp_fn);
   }
 

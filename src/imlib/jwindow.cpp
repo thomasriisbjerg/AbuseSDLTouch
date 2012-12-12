@@ -125,7 +125,7 @@ void WindowManager::get_event(Event &ev)
     {
       int closew=0,movew=0;
 
-      if ((ev.type==EV_MOUSE_BUTTON && ev.mouse_button==1 && ev.window &&
+      if ((ev.type==EV_MOUSE_BUTTON && ev.mouse_button==LEFT_BUTTON && ev.window &&
        ev.mouse_move >= ev.window->m_pos &&
        ev.mouse_move < ev.window->m_pos + ivec2(ev.window->m_size.x, ev.window->y1())))
       {
@@ -309,7 +309,7 @@ void WindowManager::flush_screen()
 {
     ivec2 m1(0, 0);
 
-    if (has_mouse())
+    if (has_mouse() && mouse_visible())
     {
         m1 = m_pos - m_center;
         ivec2 m2 = m1 + m_sprite->m_visual->Size();
@@ -323,7 +323,7 @@ void WindowManager::flush_screen()
             m_surf->DeleteDirty(p->m_pos, p->m_pos + p->m_size);
     update_dirty(m_surf);
 
-    if (has_mouse())
+    if (has_mouse() && mouse_visible())
         m_surf->PutImage(m_sprite->m_save, m1);
 
     for (Jwindow *p = m_first; p; p = p->next)
@@ -331,7 +331,7 @@ void WindowManager::flush_screen()
         if (p->is_hidden())
             continue;
 
-        if (has_mouse())
+        if (has_mouse() && mouse_visible())
         {
             m_sprite->m_save->PutPart(p->m_surf, ivec2(0, 0), m1 - p->m_pos,
                                       m1 - p->m_pos + m_sprite->m_visual->Size());
@@ -344,7 +344,7 @@ void WindowManager::flush_screen()
                 p->m_surf->DeleteDirty(q->m_pos - p->m_pos,
                                        q->m_pos - p->m_pos + q->m_size);
         update_dirty(p->m_surf, p->m_pos.x, p->m_pos.y);
-        if (has_mouse())
+        if (has_mouse() && mouse_visible())
             p->m_surf->PutImage(m_sprite->m_save, m1 - p->m_pos, 0);
     }
 }
@@ -369,6 +369,7 @@ Jwindow::Jwindow(char const *name)
     if(name)
         _name = strdup(name);
     wm->add_window(this);
+	window_orientation = JWINDOW_ORIENTATION_VERTICAL;
 }
 
 Jwindow::Jwindow(ivec2 pos, ivec2 size, ifield *f, char const *name)
@@ -414,6 +415,8 @@ Jwindow::Jwindow(ivec2 pos, ivec2 size, ifield *f, char const *name)
     wm->add_window(this);
     if(!wm->frame_suppress)
         redraw();
+	
+	window_orientation = JWINDOW_ORIENTATION_VERTICAL;
 }
 
 Jwindow::~Jwindow()
@@ -561,6 +564,22 @@ void InputManager::clear_current()
     m_active = NULL;
 }
 
+int InputManager::get_next_key(Jwindow *window)
+{
+	if (window == 0)
+		return JK_DOWN;
+	
+	return window->get_orientation() == JWINDOW_ORIENTATION_VERTICAL ? JK_DOWN : JK_RIGHT;
+}
+
+int InputManager::get_prev_key(Jwindow *window)
+{
+	if (window == 0)
+		return JK_UP;
+	
+	return window->get_orientation() == JWINDOW_ORIENTATION_VERTICAL ? JK_UP : JK_LEFT;
+}
+
 void InputManager::handle_event(Event &ev, Jwindow *j)
 {
   ifield *i,*in_area=NULL;
@@ -577,7 +596,7 @@ void InputManager::handle_event(Event &ev, Jwindow *j)
 
   if (!m_grab)
   {
-    if ((ev.type==EV_MOUSE_BUTTON && ev.mouse_button==1) || ev.type==EV_MOUSE_MOVE)
+    if ((ev.type==EV_MOUSE_BUTTON && ev.mouse_button==LEFT_BUTTON) || ev.type==EV_MOUSE_MOVE)
     {
       for (i=m_first; i; i=i->next)
       {
@@ -597,16 +616,47 @@ void InputManager::handle_event(Event &ev, Jwindow *j)
       m_active->draw(1,m_surf);
       }
     }
-    if (ev.type==EV_KEY && ev.key==JK_TAB && m_active)
+	  if (ev.type==EV_KEY && (ev.key==JK_TAB || ev.key==get_next_key(j)) && m_active) // THOMASR
     {
       m_active->draw(0,m_surf);
       do
       {
-    m_active=m_active->next;
-    if (!m_active) m_active=m_first;
+        m_active=m_active->next;
+        if (!m_active)
+			m_active=m_first;
       } while (m_active && !m_active->selectable());
       m_active->draw(1,m_surf);
     }
+    if (ev.type==EV_KEY && (ev.key==get_prev_key(j)) && m_active) // THOMASR
+	{
+      m_active->draw(0,m_surf);
+		if (m_active == m_first)
+		{
+			ifield *last = m_first;
+			while (m_active->next)
+			{
+				m_active = m_active->next;
+				if (m_active->selectable())
+					last = m_active;
+			}
+			m_active = last;
+		}
+		else
+		{
+			ifield *current = m_first;
+			ifield *last = m_first;
+			while (current->next && current->next != m_active)
+			{
+				current = current->next;
+				if (current->selectable())
+					last = current;
+			}
+			m_active = last;
+		}
+      m_active->draw(1,m_surf);
+
+	}
+
   } else m_active=m_grab;
 
   if (m_active)

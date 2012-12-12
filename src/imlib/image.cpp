@@ -880,14 +880,15 @@ void image::flood_fill(int16_t x, int16_t y, uint8_t color)
 #define LED_H 5
 void image::burn_led(int16_t x, int16_t y, int32_t num, int16_t color, int16_t scale)
 {
-  char st[100];
+  const size_t stsize = 100;
+  char st[stsize];
   int16_t ledx[]={ 1, 2, 1, 2, 3, 3, 3, 3, 1, 2, 0, 0, 0, 0};
   int16_t ledy[]={ 3, 3, 0, 0, 1, 2, 4, 6, 7, 7, 4, 6, 1, 2};
 
   int16_t dig[]={ 2+4+8+16+32+64, 4+8, 2+4+1+32+16, 2+4+1+8+16, 64+1+4+8,
              2+64+1+8+16, 64+32+1+8+16, 2+4+8, 1+2+4+8+16+32+64, 64+2+4+1+8, 1};
   int16_t xx, yy, zz;
-  sprintf(st, "%8ld", (long int)num);
+  snprintf(st, stsize, "%8ld", (long int)num);
   for (xx=0; xx<8; xx++)
   {
     if (st[xx]!=' ')

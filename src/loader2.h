@@ -83,7 +83,8 @@ image *load_image(bFILE *fp);
 void load_data(int argc, char **argv);
 char *load_script(char *name);
 void load_tiles(Cell *file_list);
-extern char lsf[256];
+const size_t lsfsize = 256;
+extern char lsf[lsfsize];
 
 #endif
 

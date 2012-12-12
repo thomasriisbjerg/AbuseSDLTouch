@@ -71,7 +71,8 @@
 			 (progn
 			   (if (local_player)		
 			       (show_help (get_train_msg (aitype))))
-			   (freeze_player 100)))		  	    
+;			   (freeze_player 100)))
+			   ))		  	    
 	    (set_aistate 1)
 	    T)
 	T)

@@ -46,7 +46,6 @@
 			    (make_view_solid (find_rgb 255 255 255))))
 	     nil) T))
 
-
 (defun fast_cache (type) (list nil (list fast_image)))
 
 (def_char POWER_FAST

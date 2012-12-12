@@ -84,7 +84,7 @@ void gui_status_manager::push(char const *name, visual_object *show)
 gui_status_manager::gui_status_manager()
 {
   first=NULL;
-  strcpy(title,"STATUS");
+  strncpy(title,"STATUS",titlesize-1); title[titlesize-1] = 0;
   last_perc=0;
 }
 
@@ -110,8 +110,10 @@ void gui_status_manager::update(int percentage)
     while (p && !p->stat_win) p=p->next;
     if (p) wy=p->stat_win->m_pos.y+p->stat_win->y2()+5;
 
-    int mx = first->stat_win->x1() + 1;
-    int my = first->stat_win->y1() + wm->font()->Size().y / 2;
+    //int mx = first->stat_win->x1() + 1;
+    //int my = first->stat_win->y1() + wm->font()->Size().y / 2;
+    int mx = frame_top();
+    int my = frame_top();
     first->stat_win=wm->CreateWindow(ivec2(wx, wy), ivec2(len3, h1*2+h2), NULL, "status");
     wm->font()->PutString(first->stat_win->m_surf, ivec2(mx, my), first->name, wm->black());
     wm->font()->PutString(first->stat_win->m_surf, ivec2(mx, my), first->name, wm->bright_color());

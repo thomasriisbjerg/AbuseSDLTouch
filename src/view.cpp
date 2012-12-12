@@ -34,9 +34,6 @@
 #include "nfserver.h"
 #include "chat.h"
 
-#define SHIFT_DOWN_DEFAULT 24
-#define SHIFT_RIGHT_DEFAULT 0
-
 extern int get_key_binding( char const *dir, int i );
 view *player_list=NULL;
 int morph_sel_frame_color;
@@ -166,7 +163,8 @@ void view::update_scroll()
         m_lastpos.y = Min(m_lastpos.y, m_focus->y + no_ytop);
 }
 
-static char cur_user_name[20] = { 0 };
+static const size_t unamesize = 20;
+static char cur_user_name[unamesize] = { 0 };
 
 char const *get_login()
 {
@@ -184,7 +182,7 @@ char const *get_login()
 
 void set_login(char const *name)
 {
-    strncpy(cur_user_name, name, 20);
+    strncpy(cur_user_name, name, unamesize);
 }
 
 view::view(game_object *focus, view *Next, int number)
@@ -207,7 +205,7 @@ view::view(game_object *focus, view *Next, int number)
   ambient=32;
   current_weapon=0;
 
-  strcpy(name,get_login());
+  strncpy(name, get_login(), namesize);
   suggest.send_view=0;
   suggest.send_weapon_change=0;
 
@@ -228,6 +226,8 @@ view::view(game_object *focus, view *Next, int number)
   b4_suggestion=0;
   pointer_x=0;
   pointer_y=0;
+  aim_x = 0;
+  aim_y = 0;
 
   pan_x=0;
   pan_y=0;
@@ -660,6 +660,14 @@ int view::handle_event(Event &ev)
             } break;
         }
     }
+	if (ev.type == EV_AIM_X)
+	{
+		aim_x = ev.key;
+	}
+	if (ev.type == EV_AIM_Y)
+	{
+		aim_y = ev.key;
+	}
     return 0;
 }
 
@@ -691,11 +699,20 @@ void recalc_local_view_space()   // calculates view areas for local players, sho
     int t=total_local_players();
     if (!t) return ;
 
+#if 1 // THOMASR statbar top
+    int sb_x1, sb_y1, sb_x2, sb_y2;
+    sbar.area(sb_x1, sb_y1, sb_x2, sb_y2);
+    int sb_h = sb_y2 - sb_y1;
+#else // THOMASR statbar bottom
+    const int sb_h = 0;
+#endif
+
     int Xres=small_render ? xres/2 : xres;
     int Yres=small_render ? yres/2 : yres;
 
     int h=Yres/t;
-    int w=h*320/200,y=5;
+    int w=h*320/200;
+    int y=5 + sb_h; // THOMASR
     if (w<300) w=300;
 
     for (view *f=player_list; f; f=f->next)
@@ -708,7 +725,11 @@ void recalc_local_view_space()   // calculates view areas for local players, sho
     if (f->suggest.cx2>Xres-2) f->suggest.cx2=Xres-2;
 
     f->suggest.cy1=y;
+#if 1 // THOMASR statbar top
+    f->suggest.cy2=h;
+#else // THOMASR statbar bottom
     f->suggest.cy2=h-(total_weapons ? 33 : 0);
+#endif
 
     f->suggest.shift = f->m_shift;
     f->suggest.pan_x=f->pan_x;
@@ -1206,7 +1227,7 @@ void process_packet_commands(uint8_t *pk, int size)
       } break;
       default :
       dprintf("Unknown net command %d\n",cmd);
-
+      break;
     }
   } while (cmd!=SCMD_END_OF_PACKET);
 }

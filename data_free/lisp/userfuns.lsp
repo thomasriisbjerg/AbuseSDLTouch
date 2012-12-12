@@ -21,8 +21,8 @@
 (defun seq (name first last)
   (if (<= first last)
       (forward-seq name first last)
-    (reverse-seq name first last))
-)
+    (reverse-seq name first last)))
+
 (defun forward-seq (name first last) 
   (if (> first last) 
       nil 

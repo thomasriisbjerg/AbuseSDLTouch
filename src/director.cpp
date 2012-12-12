@@ -40,11 +40,11 @@ extern unsigned char *white_light;
 
 
 
-int text_draw(int y, int x1, int y1, int x2, int y2, char const *buf, JCFont *font, uint8_t *cmap, char color)
+int text_draw(int y, int x1, int y1, int x2, int y2, char const *buf, JCFont *font, uint8_t *cmap, char color, bool skip_space)
 {
-    ivec2 caa, cbb;
-    main_screen->GetClip(caa, cbb);
-    main_screen->InClip(ivec2(x1, y1), ivec2(x2 + 1, y2 + 1));
+  ivec2 caa, cbb;
+  main_screen->GetClip(caa, cbb);
+  main_screen->InClip(ivec2(x1, y1), ivec2(x2 + 1, y2 + 1));
 
   int h=font->Size().y+2,w=font->Size().x,x=x1,dist;
   y+=y1;
@@ -57,17 +57,27 @@ int text_draw(int y, int x1, int y1, int x2, int y2, char const *buf, JCFont *fo
     {
       if (*buf=='\\' && buf[1]=='n')
       {
-    x=x1;
-    y+=h*2;
-    buf+=2;
+        x=x1;
+        y+=h*2;
+        buf+=2;
       }
 
       // skip space
-      if (*buf==' ' || *buf=='\r' || *buf=='\n' || *buf=='\t')
+      if (skip_space)
       {
-    x+=w;
-    while (*buf==' ' || *buf=='\r' || *buf=='\n' || *buf=='\t')   // skip space until next word
-          buf++;
+        if (*buf==' ' || *buf=='\r' || *buf=='\n' || *buf=='\t')
+        {
+          x+=w;
+          while (*buf==' ' || *buf=='\r' || *buf=='\n' || *buf=='\t')   // skip space until next word
+            buf++;
+        }
+      }
+      else
+      {
+    	if (*buf==' ' || *buf=='\t')
+    	{ x+=w; buf++; }
+    	if (*buf=='\r' || *buf=='\n')
+    	{ y+=h; x=x1; buf++; }
       }
 
       word_start=buf;
@@ -76,16 +86,16 @@ int text_draw(int y, int x1, int y1, int x2, int y2, char const *buf, JCFont *fo
 
       if (word_size<x2-x1) // make sure the word can fit on the screen
       {
-    if (word_size+x>x2)    // does word not fit on line?
-    {
-      y+=h;                // go to next line
-      x=x1;
-    }
+        if (word_size+x>x2)    // does word not fit on line?
+        {
+          y+=h;                // go to next line
+          x=x1;
+        }
       }
 
 
       if (y+h<y1)         // word on screen yet?
-    x+=word_size;
+        x+=word_size;
 
     } while (*buf && y+h<y1);     // if not on screen yet, fetch next word
 
@@ -108,10 +118,10 @@ int text_draw(int y, int x1, int y1, int x2, int y2, char const *buf, JCFont *fo
     {
       while (word_len--)
       {
-    font->PutChar(main_screen, ivec2(x + 1, y + 1), *word_start, 0);
-    font->PutChar(main_screen, ivec2(x, y), *word_start, c);
-    word_start++;
-    x+=w;
+        font->PutChar(main_screen, ivec2(x + 1, y + 1), *word_start, 0);
+        font->PutChar(main_screen, ivec2(x, y), *word_start, c);
+        word_start++;
+        x+=w;
       }
     }
 
