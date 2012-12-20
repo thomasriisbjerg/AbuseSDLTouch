@@ -19,6 +19,7 @@
 #include <stdarg.h>
 
 #include "common.h"
+#include "setup.h"
 
 #define TYPE_CHECKING 1
 
@@ -2347,7 +2348,7 @@ LObject *LSysFunction::EvalFunction(LList *arg_list)
         LObject *fn = CAR(arg_list)->Eval();
         PtrRef r1(fn);
         char *st = lstring_value(fn);
-        bFILE *fp;
+        bFILE *fp = 0;
         if (fun_number == SYS_FUNC_LOCAL_LOAD)
         {
             // A special test for gamma.lsp
@@ -2358,22 +2359,19 @@ LObject *LSysFunction::EvalFunction(LList *arg_list)
                 snprintf(gammapath, gammapathsize, "%sgamma.lsp", get_save_filename_prefix());
                 fp = new jFILE(gammapath, "rb");
             }
-            else if (strcmp(st, "english.lsp") == 0)
-            {
-            	// todo: extract locale info
-            	// todo: always load app bundled language files?
-                int locale = 0;
-                switch (locale)
-                {
-                default:
-                case 0:
-                	fp = new jFILE("english.lsp", "rb");
-                	break;
-                }
-            }
             else
                 fp = new jFILE(st, "rb");
         }
+        else if (strcmp(st, "lisp/english.lsp") == 0)
+		{
+			// todo: always load app bundled language files?
+			if (strncmp(flags.language, "french", sizeof("french")) == 0)
+				fp = new jFILE("lisp/french.lsp", "rb");
+			if (strncmp(flags.language, "german", sizeof("german")) == 0)
+				fp = new jFILE("lisp/german.lsp", "rb");
+			if (!fp || fp->open_failure())
+				fp = new jFILE(st, "rb");
+		}
         else
             fp = open_file(st, "rb");
 

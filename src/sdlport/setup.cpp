@@ -90,6 +90,7 @@ void showHelp()
     printf( "  -scale <arg>      Scale to <arg>\n" );
 //    printf( "  -x <arg>          Set the width to <arg>\n" );
 //    printf( "  -y <arg>          Set the height to <arg>\n" );
+    printf( "  -language <arg>   Select english (default), french or german language\n" );
     printf( "\n" );
     printf( "Anthony Kruize <trandor@labyrinth.net.au>\n" );
     printf( "\n" );
@@ -121,6 +122,7 @@ void createRCFile(char *rcfile) {
 //        fprintf( fd, "; Set the width of the window\nx=%i\n\n", flags.xres );
 //        fprintf( fd, "; Set the height of the window\ny=%i\n\n", flags.yres );
         fprintf(fd, "; Disable the SDL parachute in the case of a crash\nnosdlparachute=%i\n\n", flags.nosdlparachute);
+        fprintf(fd, "; Select language\nlanguage=%s\n\n", flags.language);
         fprintf(fd, "; Key mappings\n");
         // TODO: print actual default values for key bindings using key_name(int, char*)
         fprintf(fd, "left=LEFT\nright=RIGHT\nup=UP\ndown=DOWN\n");
@@ -228,6 +230,16 @@ void readRCFile()
             {
                 result = strtok( NULL, "\n" );
                 flags.use_multitouch = atoi( result );
+            }
+            else if ( strcasecmp(result, "language" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                if (strncmp(result, "french", sizeof("french")) == 0)
+                	flags.language = "french";
+                else if (strncmp(result, "german", sizeof("german")) == 0)
+                	flags.language = "german";
+                else // default to english
+                	flags.language = "english"; // we're intentionally referring to a compile-time constant string here
             }
             else if( strcasecmp( result, "left" ) == 0 )
             {
@@ -374,6 +386,24 @@ void parseCommandLine( int argc, char **argv )
         {
             flags.use_multitouch = 1;
         }
+        else if( !strcasecmp(argv[ii], "-language" ) )
+        {
+        	const size_t buffersize = 16;
+            char buffer[buffersize];
+            if( ii + 1 < argc)
+            {
+            	if (strncmp(argv[ii + 1], "french", buffersize))
+            		flags.language = "french";
+            	else if (strncmp(argv[ii + 1], "german", buffersize))
+            		flags.language = "german";
+            	else
+            	{
+            		printf("unknown language option '%s'\n", argv[ii]);
+            		flags.language = "english";
+            	}
+            	++ii;
+			}
+        }
     }
 }
 
@@ -416,6 +446,7 @@ void setup(int argc, char **argv) {
 #if defined(HAVE_OPENGL) || defined(HAVE_OPENGLES1)
     flags.antialias = GL_NEAREST; // Don't anti-alias
 #endif
+    flags.language = get_default_language();
     keys.up = key_value("UP");
     keys.down = key_value("DOWN");
     keys.left = key_value("LEFT");
@@ -503,7 +534,7 @@ void setup(int argc, char **argv) {
     }
 
     // dump flags
-    /*printf("flags.fullscreen %d\n", flags.fullscreen);
+    printf("flags.fullscreen %d\n", flags.fullscreen);
     printf("flags.doublebuf %d\n", flags.doublebuf);
     printf("flags.mono %d\n", flags.mono);
     printf("flags.nosound %d\n", flags.nosound);
@@ -516,7 +547,10 @@ void setup(int argc, char **argv) {
     printf("flags.antialias %s\n", flags.antialias == GL_NEAREST ? "NEAREST" : flags.antialias == GL_LINEAR ? "LINEAR" : "<unknown>");
     printf("flags.hidemouse %d\n", flags.hidemouse);
     printf("flags.use_multitouch %d\n", flags.use_multitouch);
-    printf("scale %d\n", scale);*/
+    printf("flags.language %s\n", flags.language);
+    printf("scale %d\n", scale);
+    printf("flags done\n");
+    fflush(stdout);
 }
 
 //
@@ -542,4 +576,9 @@ int get_key_binding(char const *dir, int i)
         return keys.b4;
 
     return 0;
+}
+
+const char *get_default_language()
+{
+	return "english";
 }

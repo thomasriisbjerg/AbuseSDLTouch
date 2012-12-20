@@ -27,6 +27,7 @@ struct flags_struct
     short gles1;
     short use_multitouch;
     int antialias;
+    const char *language;
 };
 
 struct keys_struct
@@ -41,6 +42,10 @@ struct keys_struct
     int b4;
 };
 
+extern flags_struct flags;
+
 int get_key_binding(char const *dir, int i);
+
+const char *get_default_language();
 
 #endif // _SETUP_H_
