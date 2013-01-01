@@ -222,7 +222,7 @@
 		   ;  "--------------------------------------------------------------------"  ; V-A
 		   ; Please keep all strings below shorter than the above line.               ; V-A
            ;(0 "Aim gun with mouse, fire with left mouse button")
-           (0 "Aim and fire with left control pad")
+           (0 "Move with left control pad. Aim and fire with right control pad")
            (1 "Collect ammo to increase firing speed")
            ;(2 "Press the down arrow to activate objects. This is a switch.")
            (2 "Press down to activate objects. This is a switch.")
