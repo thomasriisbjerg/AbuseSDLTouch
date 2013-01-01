@@ -23,14 +23,20 @@ void joy_eval_button(int device_index, int button_index, int &event_key);
 
 struct touch_base
 {
-	touch_base() : touch_index(-1), top_left(0), size(-1), alpha(1.0f) { }
+	touch_base() : touch_index(-1), top_left(0), size(-1), alpha(1.0f), flash_start_tick(0) { }
 	bool inside(const ivec2 &v);
 	void resize(const ivec2 &topleft, const ivec2 &s, const float xscale, const float yscale, const int width, const int height);
+	void start_flash(const uint32_t start_tick, int index);
+	void stop_flash();
+	bool visible();
 
 	int touch_index;
 	ivec2 top_left;
 	ivec2 size;
 	float alpha;
+	uint32_t flash_start_tick;
+
+	static const uint32_t flash_ticks = 10;
 };
 
 struct touch_statbar : public touch_base
@@ -99,6 +105,7 @@ struct touch_controls
 	bool visible();
 	void get_dpi(int &xdpi, int &ydpi);
 	void flash(const int index);
+	void show_help(const char *text);
 
 	touch_move move;
 	touch_aim aim;
@@ -107,6 +114,11 @@ struct touch_controls
 	touch_special special;
 
 	float alpha;
+
+	int last_flash_index;
+
+	static const size_t num_train_messages = 12;
+	char * train_messages[num_train_messages];
 };
 
 extern touch_controls touch;

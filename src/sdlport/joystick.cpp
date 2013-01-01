@@ -30,6 +30,7 @@
 #include "setup.h"
 #include "jwindow.h"
 #include "dev.h"
+#include "lisp.h"
 
 #if 0 && defined(__QNXNTO__)
 #include <screen/screen.h>
@@ -197,6 +198,31 @@ static ivec2 statbar_size(7*33, 33);
 bool touch_base::inside(const ivec2 &v)
 {
 	return v > top_left && v <= (top_left + size);
+}
+
+void touch_base::start_flash(const uint32_t start_tick, int index)
+{
+	// skip if we're already flashing
+	if (current_level && current_level->tick_counter() > flash_start_tick && current_level->tick_counter() < flash_start_tick + flash_ticks)
+	{
+		printf("start_flash already flashing from tick %i index %i\n", flash_start_tick, index); fflush(stdout);
+		return;
+	}
+
+	flash_start_tick = start_tick;
+	printf("start_flash tick %i\n", start_tick); fflush(stdout);
+}
+
+void touch_base::stop_flash()
+{
+	flash_start_tick = 0;
+}
+
+bool touch_base::visible()
+{
+	if (current_level && current_level->tick_counter() >= flash_start_tick && current_level->tick_counter() < flash_start_tick + flash_ticks && ((current_level->tick_counter() - flash_start_tick) & 2))
+		return false;
+	return true;
 }
 
 const int touch_statbar::weapon_icon_width = 33;
@@ -494,7 +520,8 @@ touch_controls::touch_controls() :
 		statbar(),
 		pause(),
 		special(),
-		alpha(1.0f)
+		alpha(1.0f),
+		last_flash_index(-1)
 {
 }
 
@@ -566,6 +593,18 @@ void touch_controls::resize()
 	statbar.resize();
 	pause.resize();
 	special.resize();
+
+	for (unsigned int i = 0; i < num_train_messages; i++)
+	{
+		char *str = lstring_value(LSymbol::FindOrCreate("plot_start")->Eval());
+
+		const size_t commandsize = 128;
+		char command[commandsize];
+		char const *c = command;
+		snprintf(command, commandsize, "(get_train_msg %i)", i);
+		LObject *o = LObject::Compile(c);
+		train_messages[i] = lstring_value(o->Eval());
+	}
 }
 
 bool touch_controls::visible()
@@ -575,7 +614,71 @@ bool touch_controls::visible()
 
 void touch_controls::flash(const int index)
 {
-	printf("touch flash %i\n", index);
+	printf("touch flash %i\n", index); fflush(stdout);
+
+	if (index != last_flash_index)
+	{
+		switch (last_flash_index)
+		{
+		case 0:
+			move.stop_flash(); // all keys
+			aim.stop_flash();
+			break;
+		case 2:
+		case 3:
+		case 4:
+		case 8:
+		case 11:
+			move.stop_flash();
+			break;
+		case 5:
+			special.stop_flash();
+			break;
+		case 6:
+			statbar.stop_flash();
+			break;
+		case 7:
+			move.stop_flash();
+			break;
+		}
+	}
+
+	uint32_t current_tick = 0;
+	if (current_level)
+		current_tick = current_level->tick_counter();
+
+	switch (index)
+	{
+	case 0:
+		move.start_flash(current_tick, index); // all keys
+		aim.start_flash(current_tick, index);
+		break;
+	case 2:
+	case 3:
+	case 4:
+	case 8:
+	case 11:
+		move.start_flash(current_tick, index); // down key
+		break;
+	case 5:
+		special.start_flash(current_tick, index);
+		break;
+	case 6:
+		statbar.start_flash(current_tick, index);
+		break;
+	case 7:
+		move.start_flash(current_tick, index); // up key
+		break;
+	}
+
+	last_flash_index = index;
+}
+
+void touch_controls::show_help(const char *text)
+{
+	for (unsigned int i = 0; i < num_train_messages; i++)
+		if (strcmp(train_messages[i], text) == 0)
+			flash(i);
 }
 
 touch_controls touch;

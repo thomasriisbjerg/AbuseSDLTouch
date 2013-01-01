@@ -504,6 +504,7 @@ void Game::menu_select(Event &ev)
 
 void Game::show_help(char const *st)
 {
+	touch.show_help(st);
     strncpy(help_text, st, helptextsize-1); help_text[helptextsize-1] = 0;
     help_text_frames = 0;
     refresh = 1;

@@ -582,6 +582,8 @@ void update_window_done()
 		touch.alpha = touch.alpha > 1 ? 1 : touch.alpha;
 		if (touch.alpha > 0)
 		{
+			const float screen_scalex = (1.0f / float(xres)) * float(flags.xres);
+			const float screen_scaley = (1.0f / float(yres)) * float(flags.yres);
 			const float touchoverlay_vertices[] = {
 				touch.move.top_left.x + 0 * touch.move.size.x / 3, touch.move.top_left.y + 1 * touch.move.size.y / 3, // 0
 				touch.move.top_left.x + 0 * touch.move.size.x / 3, touch.move.top_left.y + 0 * touch.move.size.y / 3, // 1
@@ -631,51 +633,76 @@ void update_window_done()
 				// aim
 				touch.aim.top_left.x, touch.aim.top_left.y,                                                           // 36
 				touch.aim.top_left.x + touch.aim.size.x, touch.aim.top_left.y,                                        // 37
-				touch.aim.top_left.x, (touch.aim.top_left + touch.aim.size).y,                                        // 38
-				(touch.aim.top_left + touch.aim.size).x, (touch.aim.top_left + touch.aim.size).y,                     // 39
+				touch.aim.top_left.x, touch.aim.top_left.y + touch.aim.size.y,                                        // 38
+				touch.aim.top_left.x + touch.aim.size.x, touch.aim.top_left.y + touch.aim.size.y,                     // 39
+
+				// special
+				touch.special.top_left.x * screen_scalex + x1, touch.special.top_left.y * screen_scaley + y1,                                                     // 40
+				(touch.special.top_left.x + touch.special.size.x) * screen_scalex + x1, touch.special.top_left.y * screen_scaley + y1,                            // 41
+				touch.special.top_left.x * screen_scalex + x1, (touch.special.top_left.y + touch.special.size.y) * screen_scaley + y1,                            // 42
+				(touch.special.top_left.x + touch.special.size.x) * screen_scalex + x1, (touch.special.top_left.y + touch.special.size.y) * screen_scaley + y1,   // 43
+
+				// statbar
+				touch.statbar.top_left.x * screen_scalex + x1, touch.statbar.top_left.y * screen_scaley + y1,                                                     // 44
+				(touch.statbar.top_left.x + touch.statbar.size.x) * screen_scalex + x1, touch.statbar.top_left.y * screen_scaley + y1,                            // 45
+				touch.statbar.top_left.x * screen_scalex + x1, (touch.statbar.top_left.y + touch.statbar.size.y) * screen_scaley + y1,                            // 46
+				(touch.statbar.top_left.x + touch.statbar.size.x) * screen_scalex + x1, (touch.statbar.top_left.y + touch.statbar.size.y) * screen_scaley + y1,   // 47
 			};
 
+			const float move_alpha = touch.alpha * touch.move.visible() ? 1.0f : 0.6f;
+			const float aim_alpha = touch.alpha * touch.aim.visible() ? 1.0f : 0.6f;
+			const float special_alpha = touch.alpha * touch.special.visible() ? 0.0f : 0.2f;
+			const float statbar_alpha = touch.alpha * touch.statbar.visible() ? 0.0f : 0.3f;
+
 			const float touchoverlay_colors[] = {
-					1, 1, 1, touch.alpha, // 0
-					1, 1, 1, touch.alpha, // 1
-					1, 1, 1, touch.alpha, // 2
-					1, 1, 1, touch.alpha, // 3
-					1, 1, 1, touch.alpha, // 4
-					1, 1, 1, touch.alpha, // 5
-					1, 1, 1, touch.alpha, // 6
-					1, 1, 1, touch.alpha, // 7
-					1, 1, 1, touch.alpha, // 8
-					1, 1, 1, touch.alpha, // 9
-					1, 1, 1, touch.alpha, // 10
-					1, 1, 1, touch.alpha, // 11
-					1, 1, 1, touch.alpha, // 12
-					1, 1, 1, touch.alpha, // 13
-					1, 1, 1, touch.alpha, // 14
-					1, 1, 1, touch.alpha, // 15
-					1, 1, 1, touch.alpha, // 16
-					1, 1, 1, touch.alpha, // 17
-					1, 1, 1, touch.alpha, // 18
-					1, 1, 1, touch.alpha, // 19
-					1, 1, 1, touch.alpha, // 20
-					1, 1, 1, touch.alpha, // 21
-					1, 1, 1, touch.alpha, // 22
-					1, 1, 1, touch.alpha, // 23
-					1, 1, 1, touch.alpha, // 24
-					1, 1, 1, touch.alpha, // 25
-					1, 1, 1, touch.alpha, // 26
-					1, 1, 1, touch.alpha, // 27
-					1, 1, 1, touch.alpha, // 28
-					1, 1, 1, touch.alpha, // 29
-					1, 1, 1, touch.alpha, // 30
-					1, 1, 1, touch.alpha, // 31
-					1, 1, 1, touch.alpha, // 32
-					1, 1, 1, touch.alpha, // 33
-					1, 1, 1, touch.alpha, // 34
-					1, 1, 1, touch.alpha, // 35
-					1, 1, 1, touch.alpha, // 36
-					1, 1, 1, touch.alpha, // 37
-					1, 1, 1, touch.alpha, // 38
-					1, 1, 1, touch.alpha, // 39
+					1, 1, 1, move_alpha, // 0
+					1, 1, 1, move_alpha, // 1
+					1, 1, 1, move_alpha, // 2
+					1, 1, 1, move_alpha, // 3
+					1, 1, 1, move_alpha, // 4
+					1, 1, 1, move_alpha, // 5
+					1, 1, 1, move_alpha, // 6
+					1, 1, 1, move_alpha, // 7
+					1, 1, 1, move_alpha, // 8
+					1, 1, 1, move_alpha, // 9
+					1, 1, 1, move_alpha, // 10
+					1, 1, 1, move_alpha, // 11
+					1, 1, 1, move_alpha, // 12
+					1, 1, 1, move_alpha, // 13
+					1, 1, 1, move_alpha, // 14
+					1, 1, 1, move_alpha, // 15
+					1, 1, 1, move_alpha, // 16
+					1, 1, 1, move_alpha, // 17
+					1, 1, 1, move_alpha, // 18
+					1, 1, 1, move_alpha, // 19
+					1, 1, 1, move_alpha, // 20
+					1, 1, 1, move_alpha, // 21
+					1, 1, 1, move_alpha, // 22
+					1, 1, 1, move_alpha, // 23
+					1, 1, 1, move_alpha, // 24
+					1, 1, 1, move_alpha, // 25
+					1, 1, 1, move_alpha, // 26
+					1, 1, 1, move_alpha, // 27
+					1, 1, 1, move_alpha, // 28
+					1, 1, 1, move_alpha, // 29
+					1, 1, 1, move_alpha, // 30
+					1, 1, 1, move_alpha, // 31
+					1, 1, 1, move_alpha, // 32
+					1, 1, 1, move_alpha, // 33
+					1, 1, 1, move_alpha, // 34
+					1, 1, 1, move_alpha, // 35
+					1, 1, 1, aim_alpha, // 36
+					1, 1, 1, aim_alpha, // 37
+					1, 1, 1, aim_alpha, // 38
+					1, 1, 1, aim_alpha, // 39
+					1, 1, 1, special_alpha, // 40
+					1, 1, 1, special_alpha, // 41
+					1, 1, 1, special_alpha, // 42
+					1, 1, 1, special_alpha, // 43
+					0, 0, 0, statbar_alpha, // 44
+					0, 0, 0, statbar_alpha, // 45
+					0, 0, 0, statbar_alpha, // 46
+					0, 0, 0, statbar_alpha, // 47
 			};
 
 			const float imgw = 240.0f;
@@ -693,56 +720,68 @@ void update_window_done()
 			const float move_downright_offset = (touch.move.move_down_pressed && touch.move.move_right_pressed) ? 0.5f: 0;
 
 			const float touchoverlay_texcoords[] = {
-				0 * imgw / (texw * 3) + move_upleft_offset, 1 * imgh / (texh * 3),
-				0 * imgw / (texw * 3) + move_upleft_offset, 0 * imgh / (texh * 3),
-				1 * imgw / (texw * 3) + move_upleft_offset, 1 * imgh / (texh * 3),
-				1 * imgw / (texw * 3) + move_upleft_offset, 0 * imgh / (texh * 3),
+				0 * imgw / (texw * 3) + move_upleft_offset, 1 * imgh / (texh * 3), // 0
+				0 * imgw / (texw * 3) + move_upleft_offset, 0 * imgh / (texh * 3), // 1
+				1 * imgw / (texw * 3) + move_upleft_offset, 1 * imgh / (texh * 3), // 2
+				1 * imgw / (texw * 3) + move_upleft_offset, 0 * imgh / (texh * 3), // 3
 
-				1 * imgw / (texw * 3) + move_up_offset, 1 * imgh / (texh * 3),
-				1 * imgw / (texw * 3) + move_up_offset, 0 * imgh / (texh * 3),
-				2 * imgw / (texw * 3) + move_up_offset, 1 * imgh / (texh * 3),
-				2 * imgw / (texw * 3) + move_up_offset, 0 * imgh / (texh * 3),
+				1 * imgw / (texw * 3) + move_up_offset, 1 * imgh / (texh * 3), // 4
+				1 * imgw / (texw * 3) + move_up_offset, 0 * imgh / (texh * 3), // 5
+				2 * imgw / (texw * 3) + move_up_offset, 1 * imgh / (texh * 3), // 6
+				2 * imgw / (texw * 3) + move_up_offset, 0 * imgh / (texh * 3), // 7
 
-				2 * imgw / (texw * 3) + move_upright_offset, 1 * imgh / (texh * 3),
-				2 * imgw / (texw * 3) + move_upright_offset, 0 * imgh / (texh * 3),
-				3 * imgw / (texw * 3) + move_upright_offset, 1 * imgh / (texh * 3),
-				3 * imgw / (texw * 3) + move_upright_offset, 0 * imgh / (texh * 3),
+				2 * imgw / (texw * 3) + move_upright_offset, 1 * imgh / (texh * 3), // 8
+				2 * imgw / (texw * 3) + move_upright_offset, 0 * imgh / (texh * 3), // 9
+				3 * imgw / (texw * 3) + move_upright_offset, 1 * imgh / (texh * 3), // 10
+				3 * imgw / (texw * 3) + move_upright_offset, 0 * imgh / (texh * 3), // 11
 
-				0 * imgw / (texw * 3) + move_left_offset, 2 * imgh / (texh * 3),
-				0 * imgw / (texw * 3) + move_left_offset, 1 * imgh / (texh * 3),
-				1 * imgw / (texw * 3) + move_left_offset, 2 * imgh / (texh * 3),
-				1 * imgw / (texw * 3) + move_left_offset, 1 * imgh / (texh * 3),
+				0 * imgw / (texw * 3) + move_left_offset, 2 * imgh / (texh * 3), // 12
+				0 * imgw / (texw * 3) + move_left_offset, 1 * imgh / (texh * 3), // 13
+				1 * imgw / (texw * 3) + move_left_offset, 2 * imgh / (texh * 3), // 14
+				1 * imgw / (texw * 3) + move_left_offset, 1 * imgh / (texh * 3), // 15
 
-				1 * imgw / (texw * 3), 2 * imgh / (texh * 3),
-				1 * imgw / (texw * 3), 1 * imgh / (texh * 3),
-				2 * imgw / (texw * 3), 2 * imgh / (texh * 3),
-				2 * imgw / (texw * 3), 1 * imgh / (texh * 3),
+				1 * imgw / (texw * 3), 2 * imgh / (texh * 3), // 16
+				1 * imgw / (texw * 3), 1 * imgh / (texh * 3), // 17
+				2 * imgw / (texw * 3), 2 * imgh / (texh * 3), // 18
+				2 * imgw / (texw * 3), 1 * imgh / (texh * 3), // 19
 
-				2 * imgw / (texw * 3) + move_right_offset, 2 * imgh / (texh * 3),
-				2 * imgw / (texw * 3) + move_right_offset, 1 * imgh / (texh * 3),
-				3 * imgw / (texw * 3) + move_right_offset, 2 * imgh / (texh * 3),
-				3 * imgw / (texw * 3) + move_right_offset, 1 * imgh / (texh * 3),
+				2 * imgw / (texw * 3) + move_right_offset, 2 * imgh / (texh * 3), // 20
+				2 * imgw / (texw * 3) + move_right_offset, 1 * imgh / (texh * 3), // 21
+				3 * imgw / (texw * 3) + move_right_offset, 2 * imgh / (texh * 3), // 22
+				3 * imgw / (texw * 3) + move_right_offset, 1 * imgh / (texh * 3), // 23
 
-				0 * imgw / (texw * 3) + move_downleft_offset, 3 * imgh / (texh * 3),
-				0 * imgw / (texw * 3) + move_downleft_offset, 2 * imgh / (texh * 3),
-				1 * imgw / (texw * 3) + move_downleft_offset, 3 * imgh / (texh * 3),
-				1 * imgw / (texw * 3) + move_downleft_offset, 2 * imgh / (texh * 3),
+				0 * imgw / (texw * 3) + move_downleft_offset, 3 * imgh / (texh * 3), // 24
+				0 * imgw / (texw * 3) + move_downleft_offset, 2 * imgh / (texh * 3), // 25
+				1 * imgw / (texw * 3) + move_downleft_offset, 3 * imgh / (texh * 3), // 26
+				1 * imgw / (texw * 3) + move_downleft_offset, 2 * imgh / (texh * 3), // 27
 
-				1 * imgw / (texw * 3) + move_down_offset, 3 * imgh / (texh * 3),
-				1 * imgw / (texw * 3) + move_down_offset, 2 * imgh / (texh * 3),
-				2 * imgw / (texw * 3) + move_down_offset, 3 * imgh / (texh * 3),
-				2 * imgw / (texw * 3) + move_down_offset, 2 * imgh / (texh * 3),
+				1 * imgw / (texw * 3) + move_down_offset, 3 * imgh / (texh * 3), // 28
+				1 * imgw / (texw * 3) + move_down_offset, 2 * imgh / (texh * 3), // 29
+				2 * imgw / (texw * 3) + move_down_offset, 3 * imgh / (texh * 3), // 30
+				2 * imgw / (texw * 3) + move_down_offset, 2 * imgh / (texh * 3), // 31
 
-				2 * imgw / (texw * 3) + move_downright_offset, 3 * imgh / (texh * 3),
-				2 * imgw / (texw * 3) + move_downright_offset, 2 * imgh / (texh * 3),
-				3 * imgw / (texw * 3) + move_downright_offset, 3 * imgh / (texh * 3),
-				3 * imgw / (texw * 3) + move_downright_offset, 2 * imgh / (texh * 3),
+				2 * imgw / (texw * 3) + move_downright_offset, 3 * imgh / (texh * 3), // 32
+				2 * imgw / (texw * 3) + move_downright_offset, 2 * imgh / (texh * 3), // 33
+				3 * imgw / (texw * 3) + move_downright_offset, 3 * imgh / (texh * 3), // 34
+				3 * imgw / (texw * 3) + move_downright_offset, 2 * imgh / (texh * 3), // 35
 
 				// aim
-				0, 256.0f / texh,
-				imgw / texw, 256.0f / texh,
-				0, 256.0f / texh + imgh / texh,
-				imgw / texw, 256.0f / texh + imgh / texh,
+				0, 256.0f / texh,                         // 36
+				imgw / texw, 256.0f / texh,               // 37
+				0, 256.0f / texh + imgh / texh,           // 38
+				imgw / texw, 256.0f / texh + imgh / texh, // 39
+
+				// special (unused)
+				0, 0, // 40
+				0, 0, // 41
+				0, 0, // 42
+				0, 0, // 43
+
+				// statbar (unused)
+				0, 0, // 44
+				0, 0, // 45
+				0, 0, // 46
+				0, 0, // 47
 			};
 
 			GLubyte touchoverlay_move_indices[] = {
@@ -761,7 +800,7 @@ void update_window_done()
 
 			glEnableClientState(GL_COLOR_ARRAY);
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 			glVertexPointer(2, GL_FLOAT, 0, touchoverlay_vertices);
 			glColorPointer(4, GL_FLOAT, 0, touchoverlay_colors);
 			glTexCoordPointer(2, GL_FLOAT, 0, touchoverlay_texcoords);
@@ -770,11 +809,16 @@ void update_window_done()
 			glPushMatrix();
 			glTranslatef(touch.aim.top_left.x + touch.aim.size.x / 2, touch.aim.top_left.y + touch.aim.size.y / 2, 0);
 			extern int _best_angle;
-			int angle = 360 - _best_angle; // flip rotation horizontally
+			int angle = 360 - _best_angle; // flip aim rotation horizontally
 			glRotatef(angle, 0, 0, 1);
 			glTranslatef(-touch.aim.top_left.x - touch.aim.size.x / 2, -touch.aim.top_left.y - touch.aim.size.y / 2, 0);
 			glDrawArrays(GL_TRIANGLE_STRIP, 36, 4); // draw aim
 			glPopMatrix();
+			glDisable(GL_TEXTURE_2D);
+			glDrawArrays(GL_TRIANGLE_STRIP, 40, 4); // draw special
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glDrawArrays(GL_TRIANGLE_STRIP, 44, 4); // draw statbar
+			glEnable(GL_TEXTURE_2D);
 			glDisable(GL_BLEND);
 			glDisableClientState(GL_COLOR_ARRAY);
 		}
