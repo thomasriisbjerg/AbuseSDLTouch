@@ -404,7 +404,7 @@ void scroll_text_file(const char *filename)
     }
     else
     {
-    	printf("Did not find sfx/LICENSES, skipping");
+    	printf("Did not find '%s', skipping", filename);
     }
 }
 
@@ -446,7 +446,7 @@ void show_sell(int abortable)
       tmp = (LObject *)CDR(tmp);
     }
 
-    scroll_text_file("AUTHORS");
+    scroll_text_file("../AUTHORS");
     scroll_text_file("sfx/LICENSES");
 
     wm->SetMouseShape(cache.img(c_normal)->copy(), ivec2(1, 1));
