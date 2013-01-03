@@ -1215,10 +1215,11 @@ long c_caller(long number, void *args)
     case 57 : current_object->direction=lnumber_value(CAR(args)); break;
     case 58 :
     {
+      // THOMASR - don't freeze the player when showing tutorial text
       int x1=lnumber_value(CAR(args));
-      if (!current_object->controller())
+      /*if (!current_object->controller())
       { lbreak("set_freeze_time : object is not a focus\n"); }
-      else current_object->controller()->freeze_time=x1; return 1;
+      else current_object->controller()->freeze_time=x1;*/ return 1;
     } break;
     case 59 : return menu(args,big_font); break;
     case 60 :
