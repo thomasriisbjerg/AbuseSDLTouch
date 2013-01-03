@@ -183,10 +183,11 @@ int load_game(int show_all, char const *title)   // return 0 if the player escap
 
     for (start_num=0; start_num<MAX_SAVE_GAMES; start_num++)
     {
-        char name[255];
+    	const size_t namesize = 255;
+        char name[namesize];
         int fail=0;
 
-        sprintf(name,"%ssave%04d.spe", get_save_filename_prefix(), start_num+1);
+        snprintf(name,namesize,"%ssave%04d.spe", get_save_filename_prefix(), start_num+1);
         bFILE *fp=open_file(name,"rb");
         if (fp->open_failure())
         {
