@@ -780,7 +780,13 @@ void main_menu()
     delete inm;
 
     if (ev.type==EV_MESSAGE && ev.message.id==ID_QUIT)   // propogate the quit message
+    {
+        if (current_level)
+        {
+            current_level->save(autosavename, 1);
+        }
         the_game->end_session();
+    }
 }
 
 

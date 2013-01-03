@@ -60,6 +60,8 @@ extern int demo_start,idle_ticks;
 
 extern FILE *open_FILE(char const *filename, char const *mode);
 
+#define autosavename "autosave.spe"
+
 class Game
 {
 public:

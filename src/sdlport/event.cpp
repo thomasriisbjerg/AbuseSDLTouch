@@ -271,7 +271,11 @@ void EventHandler::SysEvent(Event &ev)
     switch(sdlev.type)
     {
     case SDL_QUIT:
-        exit(0);
+        if (current_level)
+        {
+        	current_level->save(autosavename, 1);
+        }
+        the_game->end_session();
         break;
     case SDL_ACTIVEEVENT:
     	if (wm->m_first == 0 && the_game->state == RUN_STATE && sdlev.active.gain == 0 && (sdlev.active.state & SDL_APPINPUTFOCUS))

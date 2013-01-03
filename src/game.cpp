@@ -1423,7 +1423,19 @@ Game::Game(int argc, char **argv)
                  main_net_cfg->state != net_configuration::CLIENT))
   {
     if(!start_edit && !net_start())
+    {
       do_title();
+      const size_t filenamesize = 255;
+      char filename[filenamesize];
+
+      snprintf(filename, filenamesize, "%s%s", get_save_filename_prefix(), autosavename);
+      bFILE *fp=open_file(filename,"rb");
+      if (!fp->open_failure())
+      {
+  	    the_game->load_level(filename);
+      }
+      delete fp;
+    }
   } else if(main_net_cfg && main_net_cfg->state == net_configuration::SERVER)
   {
     the_game->load_level(level_file);
