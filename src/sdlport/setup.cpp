@@ -42,6 +42,10 @@
 #ifdef HAVE_OPENGLES1
 #include <GLES/gl.h>
 #endif    /* HAVE_OPENGLES1 */
+#ifdef __QNXNTO__
+#include <bps/bps.h>
+#include <bps/locale.h>
+#endif // __QNXNTO__
 
 #include "specs.h"
 #include "keys.h"
@@ -415,7 +419,7 @@ void parseCommandLine( int argc, char **argv )
         {
         	const size_t buffersize = 16;
             char buffer[buffersize];
-            if( ii + 1 < argc)
+            if (ii + 1 < argc)
             {
             	if (strncmp(argv[ii + 1], "french", buffersize))
             		flags.language = "french";
@@ -607,5 +611,23 @@ int get_key_binding(char const *dir, int i)
 
 const char *get_default_language()
 {
-	return "english";
+	const char *result = "english";
+#ifdef __QNXNTO__
+	char *country = 0;
+	char *language = 0;
+	if (locale_get(&language, &country) == BPS_SUCCESS)
+	{
+		if (strcmp(language, "fr") == 0)
+			result = "french";
+		if (strcmp(language, "de") == 0)
+			result = "german";
+		bps_free(language);
+		bps_free(country);
+	}
+	else
+	{
+		printf("locale_get failed, defaulting to english\n"); fflush(stdout);
+	}
+#endif // __QNXNTO__
+	return result;
 }
