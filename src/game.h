@@ -61,6 +61,8 @@ extern int demo_start,idle_ticks;
 extern FILE *open_FILE(char const *filename, char const *mode);
 
 #define autosavename "autosave.spe"
+#define resumename "lastlevel.txt"
+void write_resume_file(const char *name);
 
 class Game
 {

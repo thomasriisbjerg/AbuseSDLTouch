@@ -1890,6 +1890,10 @@ long c_caller(long number, void *args)
     case 223 :
     {
       char *fn=lstring_value(CAR(args));
+      const size_t pathsize = 255;
+      char path[pathsize];
+      snprintf(path, pathsize, "%s%s", get_save_filename_prefix(), fn);
+      write_resume_file(path);
       current_level->save(fn,1);
     } break;
     case 224 :

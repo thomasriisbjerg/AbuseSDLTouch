@@ -546,12 +546,41 @@ void Game::load_level(char const *name)
         spec_directory sd(fp);
         current_level = new level(&sd, fp, name);
         delete fp;
+        fp = 0;
+
+        // write level name for autosave load
+        const size_t autosavepathsize = 255;
+        char autosavepath[autosavepathsize];
+        snprintf(autosavepath, autosavepathsize, "%s%s", get_save_filename_prefix(), autosavename);
+        if (strcmp(name, autosavepath) != 0)
+        	write_resume_file(name);
+        else
+        	printf("Skipped writing %s to %s\n", name, resumename);
     }
 
     base->current_tick=(current_level->tick_counter()&0xff);
 
     current_level->level_loaded_notify();
     the_game->help_text_frames = 0;
+}
+
+void write_resume_file(const char *name)
+{
+	const size_t pathsize = 255;
+	char path[pathsize];
+	FILE *file;
+	snprintf(path, pathsize, "%s%s", get_save_filename_prefix(), resumename);
+	file = open_FILE(path, "wb");
+	if (file)
+	{
+		fprintf(file, name);
+		fclose(file);
+		printf("wrote %s to %s\n", name, path); fflush(stdout);
+	}
+	else
+	{
+		dprintf("Failed writing %s to %s\n", name, path);
+	}
 }
 
 int Game::done()
@@ -1432,7 +1461,26 @@ Game::Game(int argc, char **argv)
       bFILE *fp=open_file(filename,"rb");
       if (!fp->open_failure())
       {
-  	    the_game->load_level(filename);
+        the_game->load_level(filename);
+
+        // if file exists
+        const size_t resumepathsize = 255;
+        char resumepath[resumepathsize];
+        snprintf(resumepath, resumepathsize, "%s%s", get_save_filename_prefix(), resumename);
+        bFILE *file = open_file(resumepath, "r");
+        if(!file->open_failure())
+        {
+          const size_t buffersize = 256;
+          char buffer[buffersize];
+          memset(buffer, buffersize, 0);
+          size_t filesize = file->file_size();
+          filesize = filesize < (buffersize - 1) ? filesize : (buffersize - 1);
+          file->read(buffer, filesize);
+          buffer[filesize] = 0;
+
+          current_level->set_name(buffer);
+          printf("autosave load set name to %s\n", buffer); fflush(stdout);
+        }
       }
       delete fp;
     }
