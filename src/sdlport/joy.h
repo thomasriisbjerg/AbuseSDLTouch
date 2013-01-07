@@ -98,6 +98,7 @@ struct touch_special : public touch_base
 struct touch_controls
 {
 	touch_controls();
+	~touch_controls();
 	void mouse_motion(const int current_touch_index, const ivec2 &touchgame, const ivec2 &touchview, Event &ev);
 	void mouse_down(const int current_touch_index, const ivec2 &touchgame, const ivec2 &touchview, Event &ev);
 	void mouse_up(const int current_touch_index, Event &ev);

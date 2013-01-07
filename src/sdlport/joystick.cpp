@@ -205,12 +205,12 @@ void touch_base::start_flash(const uint32_t start_tick, int index)
 	// skip if we're already flashing
 	if (current_level && current_level->tick_counter() > flash_start_tick && current_level->tick_counter() < flash_start_tick + flash_ticks)
 	{
-		printf("start_flash already flashing from tick %i index %i\n", flash_start_tick, index); fflush(stdout);
+		//printf("start_flash already flashing from tick %i index %i\n", flash_start_tick, index); fflush(stdout);
 		return;
 	}
 
 	flash_start_tick = start_tick;
-	printf("start_flash tick %i\n", start_tick); fflush(stdout);
+	//printf("start_flash tick %i\n", start_tick); fflush(stdout);
 }
 
 void touch_base::stop_flash()
@@ -523,6 +523,18 @@ touch_controls::touch_controls() :
 		alpha(1.0f),
 		last_flash_index(-1)
 {
+	for (unsigned int i = 0; i < num_train_messages; i++)
+		train_messages[i] = 0;
+}
+
+touch_controls::~touch_controls()
+{
+	for (unsigned int i = 0; i < num_train_messages; i++)
+		if (train_messages[i])
+		{
+			free(train_messages[i]);
+			train_messages[i] = 0;
+		}
 }
 
 void touch_controls::get_dpi(int &xdpi, int &ydpi)
@@ -596,14 +608,12 @@ void touch_controls::resize()
 
 	for (unsigned int i = 0; i < num_train_messages; i++)
 	{
-		char *str = lstring_value(LSymbol::FindOrCreate("plot_start")->Eval());
-
 		const size_t commandsize = 128;
 		char command[commandsize];
 		char const *c = command;
 		snprintf(command, commandsize, "(get_train_msg %i)", i);
 		LObject *o = LObject::Compile(c);
-		train_messages[i] = lstring_value(o->Eval());
+		train_messages[i] = strdup(lstring_value(o->Eval()));
 	}
 }
 
@@ -614,7 +624,7 @@ bool touch_controls::visible()
 
 void touch_controls::flash(const int index)
 {
-	printf("touch flash %i\n", index); fflush(stdout);
+	//printf("touch flash %i\n", index); fflush(stdout);
 
 	if (index != last_flash_index)
 	{
