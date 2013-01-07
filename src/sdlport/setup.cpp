@@ -88,6 +88,7 @@ void showHelp()
     printf( "  -nosound          Disable sound\n" );
     printf( "  -hidemouse        Hide the mouse cursor\n" );
     printf( "  -scale <arg>      Scale to <arg>\n" );
+    printf( "  -touch_scale <x> <y> Touch-screen controls scale <x> <y>\n" );
 //    printf( "  -x <arg>          Set the width to <arg>\n" );
 //    printf( "  -y <arg>          Set the height to <arg>\n" );
     printf( "  -language <arg>   Select english (default), french or german language\n" );
@@ -119,6 +120,8 @@ void createRCFile(char *rcfile) {
         fprintf(fd, "; Use anti-aliasing (with gl=1 only)\nantialias=%i\n\n", flags.antialias);
         fprintf(fd, "; Hide the mouse cursor\nhidemouse=%i\n\n", flags.hidemouse);
         fprintf(fd, "; Hide the mouse cursor\nuse_multitouch=%i\n\n", flags.use_multitouch);
+        fprintf(fd, "; Touch-screen controls horizontal scale\ntouch_scale_x=%f\n\n", flags.touch_scale_x);
+        fprintf(fd, "; Touch-screen controls vertical scale\ntouch_scale_y=%f\n\n", flags.touch_scale_y);
 //        fprintf( fd, "; Set the width of the window\nx=%i\n\n", flags.xres );
 //        fprintf( fd, "; Set the height of the window\ny=%i\n\n", flags.yres );
         fprintf(fd, "; Disable the SDL parachute in the case of a crash\nnosdlparachute=%i\n\n", flags.nosdlparachute);
@@ -230,6 +233,16 @@ void readRCFile()
             {
                 result = strtok( NULL, "\n" );
                 flags.use_multitouch = atoi( result );
+            }
+            else if ( strcasecmp(result, "touch_scale_x" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.touch_scale_x = (float)atof( result );
+            }
+            else if ( strcasecmp(result, "touch_scale_y" ) == 0 )
+            {
+                result = strtok( NULL, "\n" );
+                flags.touch_scale_y = (float)atof( result );
             }
             else if ( strcasecmp(result, "language" ) == 0 )
             {
@@ -386,6 +399,18 @@ void parseCommandLine( int argc, char **argv )
         {
             flags.use_multitouch = 1;
         }
+        else if( !strcasecmp(argv[ii], "-touch_scale" ) )
+        {
+        	float scale_x = 1.0f;
+        	float scale_y = 1.0f;
+        	if (ii + 2 < argc)
+        	{
+        		scale_x = atof(argv[ii + 1]);
+        		scale_y = atof(argv[ii + 2]);
+        	}
+            flags.touch_scale_x = scale_x;
+            flags.touch_scale_y = scale_y;
+        }
         else if( !strcasecmp(argv[ii], "-language" ) )
         {
         	const size_t buffersize = 16;
@@ -433,6 +458,8 @@ void setup(int argc, char **argv) {
     flags.doublebuf = 1;
     flags.hidemouse = 1;
     flags.use_multitouch = 1;
+    flags.touch_scale_x = 1;
+    flags.touch_scale_y = 1;
     scale = 0;
 #else
     flags.fullscreen = 0; // Start in a window

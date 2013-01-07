@@ -26,6 +26,8 @@ struct flags_struct
     short gl;
     short gles1;
     short use_multitouch;
+    float touch_scale_x;
+    float touch_scale_y;
     int antialias;
     const char *language;
 };
