@@ -129,7 +129,9 @@ void createRCFile(char *rcfile) {
 //        fprintf( fd, "; Set the width of the window\nx=%i\n\n", flags.xres );
 //        fprintf( fd, "; Set the height of the window\ny=%i\n\n", flags.yres );
         fprintf(fd, "; Disable the SDL parachute in the case of a crash\nnosdlparachute=%i\n\n", flags.nosdlparachute);
+#if !defined(__QNXNTO__) // don't save language setting on BB10, use system setting
         fprintf(fd, "; Select language\nlanguage=%s\n\n", flags.language);
+#endif
         fprintf(fd, "; Key mappings\n");
         // TODO: print actual default values for key bindings using key_name(int, char*)
         fprintf(fd, "left=LEFT\nright=RIGHT\nup=UP\ndown=DOWN\n");
@@ -440,6 +442,10 @@ void parseCommandLine( int argc, char **argv )
 // Setup SDL and configuration
 //
 void setup(int argc, char **argv) {
+#ifdef __QNXNTO__
+    bps_initialize();
+#endif // __QNXNTO__
+
     // Initialise default settings
     flags.mono = 0; // Enable stereo sound
     flags.nosound = 0; // Enable sound
@@ -615,7 +621,8 @@ const char *get_default_language()
 #ifdef __QNXNTO__
 	char *country = 0;
 	char *language = 0;
-	if (locale_get(&language, &country) == BPS_SUCCESS)
+	int rc = locale_get(&language, &country);
+	if (rc == BPS_SUCCESS)
 	{
 		if (strcmp(language, "fr") == 0)
 			result = "french";
@@ -626,7 +633,7 @@ const char *get_default_language()
 	}
 	else
 	{
-		printf("locale_get failed, defaulting to english\n"); fflush(stdout);
+		printf("locale_get failed with return code %i, defaulting to english\n", rc); fflush(stdout);
 	}
 #endif // __QNXNTO__
 	return result;
