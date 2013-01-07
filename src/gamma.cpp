@@ -86,6 +86,12 @@ void gamma_correct(palette *&pal, int force_menu)
     {
         dg = lnumber_value(gs->GetValue());
     }
+#ifdef __QNXNTO__
+    else if (!force_menu)
+    {
+    	dg = 36;
+    }
+#endif // __QNXNTO__
     else
     {
         if(gs && DEFINEDP(gs->GetValue()))
