@@ -31,6 +31,9 @@
 #include "jrand.h"
 #include "director.h"
 #include "lisp_gc.h"
+#ifdef __QNXNTO__
+#include "onlineservice.h"
+#endif // __QNXNTO__
 
 extern palette *old_pal;
 
@@ -361,6 +364,10 @@ void show_end2()
 
     if (wm->IsPending())
       wm->get_event(ev);
+#ifdef __QNXNTO__
+    if (onlineservice)
+      onlineservice->update();
+#endif // __QNXNTO__
 
   } while (ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON);
 
@@ -390,7 +397,14 @@ void show_end2()
     wm->flush_screen();
     time_marker now; while (now.diff_time(&start)<0.18) now.get_time(); start.get_time();
 
-    while (wm->IsPending() && ev.type!=EV_KEY) wm->get_event(ev);
+    while (wm->IsPending() && ev.type!=EV_KEY)
+    {
+      wm->get_event(ev);
+#ifdef __QNXNTO__
+      if (onlineservice)
+        onlineservice->update();
+#endif // __QNXNTO__
+    }
   }
 
 
@@ -453,7 +467,14 @@ void share_end()
     text_draw(205-i,dx+10,dy,dx+319-10,dy+199,lstring_value(mid_plot),wm->font(),cmap,wm->bright_color());
     wm->flush_screen();
     time_marker now; while (now.diff_time(&start)<0.18) now.get_time(); start.get_time();
-    while (wm->IsPending() && ev.type!=EV_KEY) wm->get_event(ev);
+    while (wm->IsPending() && ev.type!=EV_KEY)
+    {
+      wm->get_event(ev);
+#ifdef __QNXNTO__
+      if (onlineservice)
+        onlineservice->update();
+#endif // __QNXNTO__
+    }
   }
 
   if (ev.type!=EV_KEY)
@@ -462,6 +483,10 @@ void share_end()
     {
       wm->flush_screen();
       wm->get_event(ev);
+#ifdef __QNXNTO__
+      if (onlineservice)
+        onlineservice->update();
+#endif // __QNXNTO__
     } while (ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON);
   }
 
@@ -503,7 +528,14 @@ void show_end()
     text_draw(205-i,dx+10,dy,dx+319-10,dy+199,lstring_value(end_plot),wm->font(),cmap,wm->bright_color());
     wm->flush_screen();
     time_marker now; while (now.diff_time(&start)<0.18) now.get_time(); start.get_time();
-    while (wm->IsPending() && ev.type!=EV_KEY) wm->get_event(ev);
+    while (wm->IsPending() && ev.type!=EV_KEY)
+    {
+      wm->get_event(ev);
+#ifdef __QNXNTO__
+      if (onlineservice)
+        onlineservice->update();
+#endif // __QNXNTO__
+    }
   }
 
   if (ev.type!=EV_KEY)
@@ -512,6 +544,10 @@ void show_end()
     {
       wm->flush_screen();
       wm->get_event(ev);
+#ifdef __QNXNTO__
+      if (onlineservice)
+        onlineservice->update();
+#endif // __QNXNTO__
     } while (ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON);
   }
 

@@ -40,6 +40,10 @@
 
 #include "net/sock.h"
 
+#ifdef __QNXNTO__
+#include "onlineservice.h"
+#endif // __QNXNTO__
+
 extern net_protocol *prot;
 
 static VolumeWindow *volume_window;
@@ -392,6 +396,10 @@ void scroll_text_file(const char *filename)
                 while (wm->IsPending())
                 {
                     wm->get_event(ev);
+#ifdef __QNXNTO__
+                    if (onlineservice)
+                      onlineservice->update();
+#endif // __QNXNTO__
                     if (ev.type==EV_KEY || (ev.type==EV_MOUSE_BUTTON && ev.mouse_button))
                     	done = true;
                 }
@@ -437,8 +445,13 @@ void show_sell(int abortable)
 
       Event ev;
       do
-      { wm->flush_screen();
-    wm->get_event(ev);
+      {
+        wm->flush_screen();
+        wm->get_event(ev);
+#ifdef __QNXNTO__
+        if (onlineservice)
+          onlineservice->update();
+#endif // __QNXNTO__
       } while (ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON);
       if (ev.key==JK_ESC && abortable)
         quit=1;
@@ -715,6 +728,11 @@ void main_menu()
     {
         time_marker new_time;
 
+#ifdef __QNXNTO__
+        if (onlineservice)
+          onlineservice->update();
+#endif // __QNXNTO__
+
         if (wm->IsPending())
         {
             do
@@ -734,6 +752,11 @@ void main_menu()
         {
             // ECS - Added so that main menu doesn't grab 100% of CPU
             Timer tmp; tmp.WaitMs(30);
+
+#ifdef __QNXNTO__
+            // if online service connected or needs screen refresh
+            wm->flush_screen();
+#endif // __QNXNTO__
         }
 
         if (new_time.diff_time(&start)>10)

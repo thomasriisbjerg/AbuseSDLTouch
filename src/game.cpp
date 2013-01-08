@@ -61,6 +61,10 @@
 #include "netcfg.h"
 #include "director.h"
 
+#ifdef __QNXNTO__
+#include "onlineservice.h"
+#endif // __QNXNTO__
+
 extern CrcManager *net_crcs;
 extern flags_struct flags;
 
@@ -1278,6 +1282,11 @@ void do_title()
             if((i % 5) == 0 && DEFINEDP(space_snd) && (sound_avail & SFX_INITIALIZED))
                 cache.sfx(lnumber_value(space_snd))->play(sfx_volume * 90 / 127);
 
+#ifdef __QNXNTO__
+            if (onlineservice)
+              onlineservice->update();
+#endif // __QNXNTO__
+
             frame.WaitMs(25.f);
             frame.GetMs();
         }
@@ -2437,6 +2446,14 @@ int main(int argc, char *argv[])
 
     setup(argc, argv);
 
+#ifdef __QNXNTO__
+    if (onlineservice)
+    {
+      onlineservice->init();
+      onlineservice->connect();
+    }
+#endif // __QNXNTO__
+
     show_startup();
 
     start_sound(argc, argv);
@@ -2537,6 +2554,11 @@ int main(int argc, char *argv[])
                 demo_man.do_inputs();
 
             service_net_request();
+
+#ifdef __QNXNTO__
+            if (onlineservice)
+              onlineservice->update();
+#endif // __QNXNTO__
 
             // process all the objects in the world
             g->step();
