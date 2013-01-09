@@ -549,10 +549,10 @@ void update_window_done()
         float y1 = ywinres / 2 - flags.yres / 2;
         float y2 = ywinres / 2 + flags.yres / 2;
         float vertices[] = {
-			x1, y1, 0,
-			x2, y1, 0,
-			x1, y2, 0,
-			x2, y2, 0,
+			x1, y1,
+			x2, y1,
+			x1, y2,
+			x2, y2,
 		};
 
 		float x = (float)xres / texture->w;
@@ -564,10 +564,17 @@ void update_window_done()
 			x, y,
 		};
 
+		float colors[] = {
+				0, 0, 0, 1,
+				0, 0, 0, 1,
+				0, 0, 0, 1,
+				0, 0, 0, 1,
+		};
+
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glVertexPointer(3, GL_FLOAT, 0, vertices);
+		glVertexPointer(2, GL_FLOAT, 0, vertices);
 		glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
 
 		glBindTexture(GL_TEXTURE_2D, texid);
@@ -822,6 +829,23 @@ void update_window_done()
 			glDisable(GL_BLEND);
 			glDisableClientState(GL_COLOR_ARRAY);
 		}
+
+#ifdef __QNXNTO__
+		// huge hack - for some reason the game doesn't draw properly when minimized on bb10 unless we alpha blend a texture on top
+		// find out why and remove this crap
+		{
+			glEnableClientState(GL_COLOR_ARRAY);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			glBindTexture(GL_TEXTURE_2D, touchoverlayid);
+			glVertexPointer(2, GL_FLOAT, 0, vertices);
+			glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
+			glColorPointer(4, GL_FLOAT, 0, colors);
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+			glDisable(GL_BLEND);
+			glDisableClientState(GL_COLOR_ARRAY);
+		}
+#endif
 
         if(flags.doublebuf)
             SDL_GL_SwapBuffers();
