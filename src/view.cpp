@@ -534,7 +534,7 @@ void view::next_weapon()
   while (c<total_weapons-1)
   {
     c++;
-    if (weapon_total(c)>0)
+    if (weapon_total(c)>0 || c==0)
     {
       suggest.send_weapon_change=1;
       suggest.new_weapon=c;
@@ -545,7 +545,7 @@ void view::next_weapon()
   c=0;
   while (c!=current_weapon)
   {
-    if (weapon_total(c)>0)
+    if (weapon_total(c)>0 || c==0)
     {
       suggest.send_weapon_change=1;
       suggest.new_weapon=c;
@@ -632,7 +632,7 @@ int view::handle_event(Event &ev)
             case '6':
             case '7':
             {
-                if((( dev & EDIT_MODE ) == 0 ) && ( weapon_total( ev.key - '1' ) > 0 ))
+                if((( dev & EDIT_MODE ) == 0 ) && ( weapon_total( ev.key - '1' ) > 0 || ev.key == '1' ))
                 {
                     suggest.send_weapon_change = 1;
                     suggest.new_weapon=ev.key - '1';
