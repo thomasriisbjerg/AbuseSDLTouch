@@ -206,7 +206,8 @@
 	 (setq level_size "Levelgr”áe")
                            ; 012345678901234567 (please keep same allignment of Name level & total)
 	 (setq score_header "Name              Level gesamt")   ; V-E 
-	 (setq space_cont "LEERTASTE, um fortzufahren ")        ; V-E
+	 ;(setq space_cont "LEERTASTE, um fortzufahren ")        ; V-E 
+	 (setq space_cont "Berühren Sie Bildschirm, um fortzufahren ")        ; V-E
 	 (setq no_saved "Kein gespeichertes Spiel")
 
 	 (setq lvl_2   "Klein") ; V-C added
@@ -223,13 +224,16 @@
 
          (defun get_train_msg (message_num)
            (select message_num    
-                   (0 "Mit der Maus zielen und mit Linksklick feuern.")
+                   ;(0 "Mit der Maus zielen und mit Linksklick feuern.")
+                   (0 "Bewegen Sie mit Pfeilen. Ziel und Feuer mit der rechten Steuerkreuz")
                    (1 "Munition sammeln, um Schuárate zu erh”hen.")
                    (2 "Mit Pfeiltaste (unten) aktivieren - hier ist ein Schalter.")
                    (3 "Hier Spiel speichern, Pfeiltaste (unten) drcken.")
                    (4 "Pfeiltaste (unten) drcken, um Plattform zu aktivieren.")
-                   (5 "Rechten Mausknopf festhalten, um Spezialkr„fte zu aktivieren.")
-                   (6 "Mit STRG oder EINFG w„hlen Sie Waffen aus.")
+                   ;(5 "Rechten Mausknopf festhalten, um Spezialkr„fte zu aktivieren.")
+                   (5 "Drcken Sie spezielle Power-Symbol, um spezielle Kr„fte zu wechseln")
+                   ;(6 "Mit STRG oder EINFG w„hlen Sie Waffen aus.")
+                   (6 "Drcken Waffe icons Waffen wechseln")
                    (7 "Pfeiltaste (oben) drcken, um Leiter hochzuklettern.")
                    (8 "Fr n„chsten Level Pfeiltaste (unten) drcken.")
                    (9 "Auf versteckte W„nde schieáen, um sie zu zerst”ren.")

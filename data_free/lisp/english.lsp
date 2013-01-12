@@ -201,7 +201,8 @@
 	 (setq level_size "Level size")
                            ; 012345678901234567 (please keep same allignment of Name level & total)
 	 (setq score_header "Name              Level Total")   ; V-E 
-	 (setq space_cont "Press SPACEBAR to continue")        ; V-E
+	 ;(setq space_cont "Press SPACEBAR to continue")        ; V-E
+	 (setq space_cont "Touch screen to continue")             ; V-E 
 	 (setq no_saved "No saved game")
 
 	 (setq lvl_2   "Small") ; V-C added
@@ -222,7 +223,7 @@
 		   ;  "--------------------------------------------------------------------"  ; V-A
 		   ; Please keep all strings below shorter than the above line.               ; V-A
            ;(0 "Aim gun with mouse, fire with left mouse button")
-           (0 "Move with left control pad. Aim and fire with right control pad")
+           (0 "Move with arrows. Aim and fire with right control pad")
            (1 "Collect ammo to increase firing speed")
            ;(2 "Press the down arrow to activate objects. This is a switch.")
            (2 "Press down to activate objects. This is a switch.")

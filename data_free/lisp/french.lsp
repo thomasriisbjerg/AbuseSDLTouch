@@ -205,7 +205,8 @@ plan \n"
 	 (setq level_size "Taille du niveau")
                            ; 012345678901234567 (please keep same allignment of Name level & total)
 	 (setq score_header "Nom          Total du niveau")   ; V-E 
-	 (setq space_cont "Appuyez sur la BARRE D'ESPACE pour continuer")        ; V-E
+	 ;(setq space_cont "Appuyez sur la BARRE D'ESPACE pour continuer")        ; V-E
+	 (setq space_cont "Touchez l'écran pour continuer")        ; V-E
 	 (setq no_saved "Pas de jeu sauvegard‚")
 
 	 (setq lvl_2   "Petit") ; V-C added
@@ -224,13 +225,16 @@ plan \n"
 
          (defun get_train_msg (message_num)
            (select message_num    
-                   (0 "Pointez le canon avec la souris, tirez avec le bouton gauche")
+                   ;(0 "Pointez le canon avec la souris, tirez avec le bouton gauche")
+                   (0 "D‚placer avec les flŠches. Viser et tirer avec clavier de commande a droite")
                    (1 "R‚cup‚rez des munitions pour augmenter votre cadence de tir")
                    (2 "Appuyez sur la flŠche bas pour activer l'interrupteur")
                    (3 "Appuyez sur la flŠche bas pour sauvegarder le jeu")
                    (4 "Appuyez sur la flŠche bas pour activer la plate-forme")
-                   (5 "Appuyez sur bouton droit, maintenez pour utiliser un pouvoir")
-                   (6 "Utilisez les touches CTRL ou INSER pour s‚lectionner les armes")
+                   ;(5 "Appuyez sur bouton droit, maintenez pour utiliser un pouvoir")
+                   (5 "Appuyez sur l'icone de puissance sp‚ciale pour alterner pouvoirs sp‚ciaux")
+                   ;(6 "Utilisez les touches CTRL ou INSER pour s‚lectionner les armes")
+                   (6 "Appuyez sur les icones d'armes pour changer d'armes")
                    (7 "Appuyez sur la flŠche haut pour monter aux ‚chelles")
                    (8 "Appuyez sur la flŠche bas pour activer !")
                    (9 "Tirez sur les parois destructibles pour les d‚molir")
