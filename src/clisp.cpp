@@ -20,6 +20,8 @@
 #include "sdlport/joy.h"
 #include "sdlport/setup.h"
 
+#include "onlineservice.h"
+
 #include "ant.h"
 #include "lisp.h"
 #include "game.h"
@@ -38,6 +40,7 @@
 #include "chat.h"
 #include "jdir.h"
 #include "netcfg.h"
+#include "ascii85.h"
 
 #define ENGINE_MAJOR 1
 #define ENGINE_MINOR 20
@@ -1508,7 +1511,8 @@ long c_caller(long number, void *args)
     case 152 :
     {
       view *v=current_object->controller();
-      if (!v) dprintf("Can't use reset_player on non-players\n");
+      if (!v)
+        dprintf("Can't use reset_player on non-players\n");
       else
         v->reset_player();
     } break;
@@ -1895,6 +1899,8 @@ long c_caller(long number, void *args)
       snprintf(path, pathsize, "%s%s", get_save_filename_prefix(), fn);
       write_resume_file(path);
       current_level->save(fn,1);
+      if (onlineservice)
+        onlineservice->persistSaveGame(fn);
     } break;
     case 224 :
     {
@@ -2292,24 +2298,21 @@ long c_caller(long number, void *args)
       view *v=player_list;
       for (; v; v=v->next)
       {
-    v->tkills+=v->kills;
-
+        v->tkills+=v->kills;
         v->kills=0;
-    game_object *o=current_object;
-    current_object=v->m_focus;
+        game_object *o=current_object;
+        current_object=v->m_focus;
 
-    ((LSymbol *)l_restart_player)->EvalFunction(NULL);
-    v->reset_player();
-    v->m_focus->set_aistate(0);
-    current_object=o;
+        ((LSymbol *)l_restart_player)->EvalFunction(NULL);
+        v->reset_player();
+        v->m_focus->set_aistate(0);
+        current_object=o;
       }
-
     } break;
     case 295 :
     {
       strncpy(game_name,lstring_value(CAR(args)),gamenamesize);
       game_name[gamenamesize-1]=0;
-
     } break;
     case 296 :
     {
