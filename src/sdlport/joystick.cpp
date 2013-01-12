@@ -498,6 +498,11 @@ void touch_controls::mouse_motion(const int current_touch_index, const ivec2 &to
 
 void touch_controls::mouse_down(const int current_touch_index, const ivec2 &touchgame, const ivec2 &touchview, Event &ev)
 {
+	if (fullscreen_key != -1)
+	{
+		create_event(fullscreen_key, EV_KEY, ev);
+		return;
+	}
 	statbar.mouse_down(current_touch_index, touchgame, ev);
 	pause.mouse_down(current_touch_index, touchgame, ev);
 	special.mouse_down(current_touch_index, touchgame, ev);
@@ -507,6 +512,12 @@ void touch_controls::mouse_down(const int current_touch_index, const ivec2 &touc
 
 void touch_controls::mouse_up(const int current_touch_index, Event &ev)
 {
+	if (fullscreen_key != -1)
+	{
+		create_event(fullscreen_key, EV_KEYRELEASE, ev);
+		set_fullscreen_key(-1);
+		return;
+	}
 	statbar.mouse_up(current_touch_index, ev);
 	pause.mouse_up(current_touch_index, ev);
 	special.mouse_up(current_touch_index, ev);
@@ -521,7 +532,8 @@ touch_controls::touch_controls() :
 		pause(),
 		special(),
 		alpha(1.0f),
-		last_flash_index(-1)
+		last_flash_index(-1),
+		fullscreen_key(-1)
 {
 	for (unsigned int i = 0; i < num_train_messages; i++)
 		train_messages[i] = 0;
@@ -689,6 +701,11 @@ void touch_controls::show_help(const char *text)
 	for (unsigned int i = 0; i < num_train_messages; i++)
 		if (strcmp(train_messages[i], text) == 0)
 			flash(i);
+}
+
+void touch_controls::set_fullscreen_key(int key)
+{
+	fullscreen_key = key;
 }
 
 touch_controls touch;

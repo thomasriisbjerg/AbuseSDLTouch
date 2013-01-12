@@ -107,6 +107,7 @@ struct touch_controls
 	void get_dpi(int &xdpi, int &ydpi);
 	void flash(const int index);
 	void show_help(const char *text);
+	void set_fullscreen_key(int key);
 
 	touch_move move;
 	touch_aim aim;
@@ -117,6 +118,8 @@ struct touch_controls
 	float alpha;
 
 	int last_flash_index;
+
+	int fullscreen_key;
 
 	static const size_t num_train_messages = 12;
 	char * train_messages[num_train_messages];

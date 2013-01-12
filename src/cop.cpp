@@ -24,6 +24,8 @@
 #include "clisp.h"
 #include "ant.h"
 #include "dev.h"
+#include "setup.h"
+#include "joy.h"
 
 enum { point_angle, fire_delay1 };
 
@@ -649,7 +651,6 @@ static int climb_handler(game_object *o, int xm, int ym, int but)
 
 void *cop_mover(int xm, int ym, int but)
 {
-
   int ret=0;
   game_object *o=current_object,*top;
   if (o->controller() && o->controller()->freeze_time)
@@ -666,7 +667,9 @@ void *cop_mover(int xm, int ym, int but)
       current_level->add_object_after(top,o);
       o->add_object(top);
       top->add_object(o);
-    } else top=o->get_object(0);
+    }
+    else
+      top=o->get_object(0);
 
     if (o->yvel()>10)
     {
@@ -677,57 +680,65 @@ void *cop_mover(int xm, int ym, int but)
     if (o->aistate()==0)  // just started, wait for button
     {
       o->set_aistate(1);
-    } else if (o->aistate()==1)         // normal play
+    }
+    else if (o->aistate()==1)         // normal play
     {
       if (o->hp()==0)
       {
-    o->set_aistate(2);                // go to deing state
-    o->set_state(dead);
+        o->set_aistate(2);                // go to deing state
+        o->set_state(dead);
       }
       else
       {
-    if (o->hp()<40 && (current_level->tick_counter()%16)==0) // if low on health play heart beat
-      the_game->play_sound(S_LOW_HEALTH_SND,127,o->x,o->y);
-    else if (o->hp()<15 && (current_level->tick_counter()%8)==0) // if low on health play heart beat
-      the_game->play_sound(S_LOW_HEALTH_SND,127,o->x,o->y);
-    else if (o->hp()<7 && (current_level->tick_counter()%4)==0) // if low on health play heart beat
-      the_game->play_sound(S_LOW_HEALTH_SND,127,o->x,o->y);
+        if (o->hp()<40 && (current_level->tick_counter()%16)==0) // if low on health play heart beat
+          the_game->play_sound(S_LOW_HEALTH_SND,127,o->x,o->y);
+        else if (o->hp()<15 && (current_level->tick_counter()%8)==0) // if low on health play heart beat
+          the_game->play_sound(S_LOW_HEALTH_SND,127,o->x,o->y);
+        else if (o->hp()<7 && (current_level->tick_counter()%4)==0) // if low on health play heart beat
+          the_game->play_sound(S_LOW_HEALTH_SND,127,o->x,o->y);
 
-    if (but&1)
-        do_special_power(o,xm,ym,but,top);
-    else
-    undo_special_power(o);
-    ret=player_move(o,xm,ym,but);
-    top->x=o->x;
-    top->y=o->y+29-top->picture()->Size().y;
+        if (but&1)
+          do_special_power(o,xm,ym,but,top);
+        else
+          undo_special_power(o);
+        ret=player_move(o,xm,ym,but);
+        top->x=o->x;
+        top->y=o->y+29-top->picture()->Size().y;
 
-    if ((but&2) && !o->lvars[is_teleporting] && o->state!=S_climbing && o->state!=S_climb_off)
-    {
-      void *args=NULL;
-      PtrRef r1(args);
-      view *v=o->controller();
+        if ((but&2) && !o->lvars[is_teleporting] && o->state!=S_climbing && o->state!=S_climb_off)
+        {
+          void *args=NULL;
+          PtrRef r1(args);
+          view *v=o->controller();
 
-      push_onto_list(LNumber::Create(v->weapon_total(v->current_weapon)),args);
-      push_onto_list(l_FIRE,args);
+          push_onto_list(LNumber::Create(v->weapon_total(v->current_weapon)),args);
+          push_onto_list(l_FIRE,args);
 
-      current_object=top;
-      void *ret = ((LSymbol *)figures[top->otype]->get_fun(OFUN_USER_FUN))->EvalFunction(args);
-      current_object=o;
-      v->add_ammo(v->current_weapon,lnumber_value(ret));
-    }
+          current_object=top;
+          void *ret = ((LSymbol *)figures[top->otype]->get_fun(OFUN_USER_FUN))->EvalFunction(args);
+          current_object=o;
+          v->add_ammo(v->current_weapon,lnumber_value(ret));
+        }
       }
-    } else if (o->aistate()==3)
+    }
+    else if (o->aistate()==3)
     {
       if (!o->controller() || o->controller()->key_down(JK_SPACE) || o->controller()->key_down(JK_ENTER)) // THOMASR
       {
         // call the user function to reset the player
-    ((LSymbol *)l_restart_player)->EvalFunction(NULL);
-    o->controller()->reset_player();
-    o->set_aistate(0);
-      } else if (o->controller() && o->controller()->local_player())
+        ((LSymbol *)l_restart_player)->EvalFunction(NULL);
+        o->controller()->reset_player();
+        o->set_aistate(0);
+      }
+      else if (o->controller() && o->controller()->local_player())
+      {
         the_game->show_help(symbol_str("space_cont"));
-
-    } else o->set_aistate(o->aistate()+1);
+        if (flags.use_multitouch)
+          touch.set_fullscreen_key(JK_SPACE);
+      }
+    }
+    else
+      o->set_aistate(o->aistate()+1);
   }
 
   return LNumber::Create(ret);
