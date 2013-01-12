@@ -227,7 +227,7 @@ bool touch_base::visible()
 
 const int touch_statbar::weapon_icon_width = 33;
 
-void touch_statbar::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
+bool touch_statbar::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
 {
 	if (wm->m_first == 0 && the_game->state == RUN_STATE && inside(touch) && touch_index == -1)
 	{
@@ -241,10 +241,12 @@ void touch_statbar::mouse_down(const int current_touch_index, const ivec2 &touch
 		create_event('1' + weapon_index, EV_KEY, ev);
 
 		selected_weapon = weapon_index;
+		return true;
 	}
+	return false;
 }
 
-void touch_statbar::mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev)
+bool touch_statbar::mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev)
 {
 	if (the_game->state == RUN_STATE && touch_index == current_touch_index)
 	{
@@ -260,16 +262,20 @@ void touch_statbar::mouse_motion(const int current_touch_index, const ivec2 &tou
 			create_event('1' + weapon_index, EV_KEY, ev, first_event);
 			selected_weapon = weapon_index;
 		}
+		return true;
 	}
+	return false;
 }
 
-void touch_statbar::mouse_up(const int current_touch_index, Event &ev)
+bool touch_statbar::mouse_up(const int current_touch_index, Event &ev)
 {
 	if (touch_index == current_touch_index)
 	{
 		touch_index = -1;
 		create_event('1' + selected_weapon, EV_KEYRELEASE, ev);
+		return true;
 	}
+	return false;
 }
 
 void touch_base::resize(const ivec2 &topleft, const ivec2 &s, const float xscale, const float yscale, const int width, const int height)
@@ -286,7 +292,7 @@ void touch_statbar::resize()
 	touch_base::resize(statbar_topleft, statbar_size, 1.0f, 1.0f, xres, yres);
 }
 
-void touch_move::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
+bool touch_move::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
 {
 	if (wm->m_first == 0 && the_game->state == RUN_STATE && inside(touch) && touch_index == -1)
 	{
@@ -316,10 +322,12 @@ void touch_move::mouse_down(const int current_touch_index, const ivec2 &touch, E
 			move_down_pressed = true;
 			create_event(get_key_binding("down", 0), EV_KEY, ev, first_event);
 		}
+		return true;
 	}
+	return false;
 }
 
-void touch_move::mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev)
+bool touch_move::mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev)
 {
 	if (the_game->state == RUN_STATE && touch_index == current_touch_index)
 	{
@@ -347,10 +355,12 @@ void touch_move::mouse_motion(const int current_touch_index, const ivec2 &touch,
 			move_down_pressed = !move_down_pressed;
 			create_event(get_key_binding("down", 0), move_down_pressed ? EV_KEY : EV_KEYRELEASE, ev, first_event);
 		}
+		return true;
 	}
+	return false;
 }
 
-void touch_move::mouse_up(const int current_touch_index, Event &ev)
+bool touch_move::mouse_up(const int current_touch_index, Event &ev)
 {
 	if (touch_index == current_touch_index)
 	{
@@ -378,7 +388,9 @@ void touch_move::mouse_up(const int current_touch_index, Event &ev)
 			move_down_pressed = false;
 			create_event(get_key_binding("down", 0), EV_KEYRELEASE, ev, first_event);
 		}
+		return true;
 	}
+	return false;
 }
 
 void touch_move::resize(const float xscale, const float yscale)
@@ -389,7 +401,7 @@ void touch_move::resize(const float xscale, const float yscale)
 
 int _best_angle; // this is read from video.cpp update_window_done() and written from cop.cpp top_ai()
 
-void touch_aim::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
+bool touch_aim::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
 {
 	if (wm->m_first == 0 && the_game->state == RUN_STATE && inside(touch) && touch_index == -1)
 	{
@@ -405,10 +417,12 @@ void touch_aim::mouse_down(const int current_touch_index, const ivec2 &touch, Ev
 		create_event(d.x, EV_AIM_X, ev, first_event);
 		create_event(d.y, EV_AIM_Y, ev, first_event);
 		create_event(get_key_binding("b2", 0), EV_KEY, ev, first_event);
+		return true;
 	}
+	return false;
 }
 
-void touch_aim::mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev)
+bool touch_aim::mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev)
 {
 	if (the_game->state == RUN_STATE && touch_index == current_touch_index)
 	{
@@ -421,10 +435,12 @@ void touch_aim::mouse_motion(const int current_touch_index, const ivec2 &touch, 
 		bool first_event = true;
 		create_event(d.x, EV_AIM_X, ev, first_event);
 		create_event(d.y, EV_AIM_Y, ev, first_event);
+		return true;
 	}
+	return false;
 }
 
-void touch_aim::mouse_up(const int current_touch_index, Event &ev)
+bool touch_aim::mouse_up(const int current_touch_index, Event &ev)
 {
 	if (touch_index == current_touch_index)
 	{
@@ -433,7 +449,9 @@ void touch_aim::mouse_up(const int current_touch_index, Event &ev)
 		create_event(0, EV_AIM_X, ev, first_event);
 		create_event(0, EV_AIM_Y, ev, first_event);
 		create_event(get_key_binding("b2", 0), EV_KEYRELEASE, ev, first_event);
+		return true;
 	}
+	return false;
 }
 
 void touch_aim::resize(const float xscale, const float yscale)
@@ -442,22 +460,26 @@ void touch_aim::resize(const float xscale, const float yscale)
 	aim_threshold = size.x / 8;
 }
 
-void touch_pause::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
+bool touch_pause::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
 {
 	if (wm->m_first == 0 && (the_game->state == RUN_STATE || the_game->state == PAUSE_STATE) && inside(touch) && touch_index == -1)
 	{
 		touch_index = current_touch_index;
 		create_event('p', EV_KEY, ev);
+		return true;
 	}
+	return false;
 }
 
-void touch_pause::mouse_up(const int current_touch_index, Event &ev)
+bool touch_pause::mouse_up(const int current_touch_index, Event &ev)
 {
 	if (touch_index == current_touch_index)
 	{
 		touch_index = -1;
 		create_event('p', EV_KEYRELEASE, ev);
+		return true;
 	}
+	return false;
 }
 
 void touch_pause::resize()
@@ -465,7 +487,7 @@ void touch_pause::resize()
 	touch_base::resize(pause_topleft, pause_size, 1.0f, 1.0f, xres, yres);
 }
 
-void touch_special::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
+bool touch_special::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
 {
 	if (wm->m_first == 0 && the_game->state == RUN_STATE && inside(touch) && touch_index == -1)
 	{
@@ -473,15 +495,19 @@ void touch_special::mouse_down(const int current_touch_index, const ivec2 &touch
 		create_event(get_key_binding("b1", 0), pressed ? EV_KEYRELEASE : EV_KEY, ev);
 
 		pressed = !pressed;
+		return true;
 	}
+	return false;
 }
 
-void touch_special::mouse_up(const int current_touch_index, Event &ev)
+bool touch_special::mouse_up(const int current_touch_index, Event &ev)
 {
 	if (touch_index == current_touch_index)
 	{
 		touch_index = -1;
+		return true;
 	}
+	return false;
 }
 
 void touch_special::resize()
@@ -489,39 +515,67 @@ void touch_special::resize()
 	touch_base::resize(special_topleft, special_size, 1.0f, 1.0f, xres, yres);
 }
 
+bool touch_fullscreen::mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev)
+{
+	if (enabled && touch_index == -1)
+	{
+		touch_index = current_touch_index;
+		create_event(JK_SPACE, EV_KEY, ev);
+		return true;
+	}
+	return false;
+}
+
+bool touch_fullscreen::mouse_up(const int current_touch_index, Event &ev)
+{
+	if (touch_index == current_touch_index)
+	{
+		touch_index = -1;
+		create_event(JK_SPACE, EV_KEYRELEASE, ev);
+		enabled = false;
+		return true;
+	}
+	return false;
+}
+
+void touch_fullscreen::enable(const bool value)
+{
+	if (enabled && value == false && touch_index != -1)
+	{
+		Event *e = new Event();
+		e->type = EV_KEYRELEASE;
+		e->key = JK_SPACE;
+		e->mouse_button = 0;
+		e->mouse_move = ivec2(0);
+		wm->Push(e);
+	}
+	enabled = value;
+}
+
 void touch_controls::mouse_motion(const int current_touch_index, const ivec2 &touchgame, const ivec2 &touchview, Event &ev)
 {
-	statbar.mouse_motion(current_touch_index, touchgame, ev);
-	move.mouse_motion(current_touch_index, touchview, ev);
+	statbar.mouse_motion(current_touch_index, touchgame, ev) ||
+	move.mouse_motion(current_touch_index, touchview, ev) ||
 	aim.mouse_motion(current_touch_index, touchview, ev);
 }
 
 void touch_controls::mouse_down(const int current_touch_index, const ivec2 &touchgame, const ivec2 &touchview, Event &ev)
 {
-	if (fullscreen_key != -1)
-	{
-		create_event(fullscreen_key, EV_KEY, ev);
-		return;
-	}
-	statbar.mouse_down(current_touch_index, touchgame, ev);
-	pause.mouse_down(current_touch_index, touchgame, ev);
-	special.mouse_down(current_touch_index, touchgame, ev);
-	move.mouse_down(current_touch_index, touchview, ev);
+	fullscreen.mouse_down(current_touch_index, touchgame, ev) ||
+	statbar.mouse_down(current_touch_index, touchgame, ev) ||
+	pause.mouse_down(current_touch_index, touchgame, ev) ||
+	special.mouse_down(current_touch_index, touchgame, ev) ||
+	move.mouse_down(current_touch_index, touchview, ev) ||
 	aim.mouse_down(current_touch_index, touchview, ev);
 }
 
 void touch_controls::mouse_up(const int current_touch_index, Event &ev)
 {
-	if (fullscreen_key != -1)
-	{
-		create_event(fullscreen_key, EV_KEYRELEASE, ev);
-		set_fullscreen_key(-1);
-		return;
-	}
-	statbar.mouse_up(current_touch_index, ev);
-	pause.mouse_up(current_touch_index, ev);
-	special.mouse_up(current_touch_index, ev);
-	move.mouse_up(current_touch_index, ev);
+	fullscreen.mouse_up(current_touch_index, ev) ||
+	statbar.mouse_up(current_touch_index, ev) ||
+	pause.mouse_up(current_touch_index, ev) ||
+	special.mouse_up(current_touch_index, ev) ||
+	move.mouse_up(current_touch_index, ev) ||
 	aim.mouse_up(current_touch_index, ev);
 }
 
@@ -531,9 +585,9 @@ touch_controls::touch_controls() :
 		statbar(),
 		pause(),
 		special(),
+		fullscreen(),
 		alpha(1.0f),
-		last_flash_index(-1),
-		fullscreen_key(-1)
+		last_flash_index(-1)
 {
 	for (unsigned int i = 0; i < num_train_messages; i++)
 		train_messages[i] = 0;
@@ -701,11 +755,6 @@ void touch_controls::show_help(const char *text)
 	for (unsigned int i = 0; i < num_train_messages; i++)
 		if (strcmp(train_messages[i], text) == 0)
 			flash(i);
-}
-
-void touch_controls::set_fullscreen_key(int key)
-{
-	fullscreen_key = key;
 }
 
 touch_controls touch;

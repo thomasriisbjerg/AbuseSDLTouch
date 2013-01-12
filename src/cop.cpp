@@ -729,12 +729,14 @@ void *cop_mover(int xm, int ym, int but)
         ((LSymbol *)l_restart_player)->EvalFunction(NULL);
         o->controller()->reset_player();
         o->set_aistate(0);
+        if (flags.use_multitouch)
+          touch.fullscreen.enable(false);
       }
       else if (o->controller() && o->controller()->local_player())
       {
         the_game->show_help(symbol_str("space_cont"));
         if (flags.use_multitouch)
-          touch.set_fullscreen_key(JK_SPACE);
+          touch.fullscreen.enable(true);
       }
     }
     else

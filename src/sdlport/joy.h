@@ -42,9 +42,9 @@ struct touch_base
 struct touch_statbar : public touch_base
 {
 	touch_statbar() : touch_base() { }
-	void mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev);
-	void mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
-	void mouse_up(const int current_touch_index, Event &ev);
+	bool mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev);
+	bool mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
+	bool mouse_up(const int current_touch_index, Event &ev);
 	void resize();
 
 	static const int weapon_icon_width;
@@ -54,9 +54,9 @@ struct touch_statbar : public touch_base
 struct touch_move : public touch_base
 {
 	touch_move() : touch_base() { }
-	void mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev);
-	void mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
-	void mouse_up(const int current_touch_index, Event &ev);
+	bool mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev);
+	bool mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
+	bool mouse_up(const int current_touch_index, Event &ev);
 	void resize(float xscale, float yscale);
 
 	ivec2 move_threshold;
@@ -69,9 +69,9 @@ struct touch_move : public touch_base
 struct touch_aim : public touch_base
 {
 	touch_aim() : touch_base() { }
-	void mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev);
-	void mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
-	void mouse_up(const int current_touch_index, Event &ev);
+	bool mouse_motion(const int current_touch_index, const ivec2 &touch, Event &ev);
+	bool mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
+	bool mouse_up(const int current_touch_index, Event &ev);
 	void resize(float xscale, float yscale);
 
 	int aim_threshold;
@@ -80,19 +80,28 @@ struct touch_aim : public touch_base
 struct touch_pause : public touch_base
 {
 	touch_pause() : touch_base() { }
-	void mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
-	void mouse_up(const int current_touch_index, Event &ev);
+	bool mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
+	bool mouse_up(const int current_touch_index, Event &ev);
 	void resize();
 };
 
 struct touch_special : public touch_base
 {
 	touch_special() : touch_base() { }
-	void mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
-	void mouse_up(const int current_touch_index, Event &ev);
+	bool mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
+	bool mouse_up(const int current_touch_index, Event &ev);
 	void resize();
 
 	bool pressed;
+};
+
+struct touch_fullscreen : public touch_base
+{
+	touch_fullscreen() : touch_base(), enabled(false) { }
+	bool mouse_down(const int current_touch_index, const ivec2 &touch, Event &ev);
+	bool mouse_up(const int current_touch_index, Event &ev);
+	void enable(const bool value);
+	bool enabled;
 };
 
 struct touch_controls
@@ -107,19 +116,17 @@ struct touch_controls
 	void get_dpi(int &xdpi, int &ydpi);
 	void flash(const int index);
 	void show_help(const char *text);
-	void set_fullscreen_key(int key);
 
 	touch_move move;
 	touch_aim aim;
 	touch_statbar statbar;
 	touch_pause pause;
 	touch_special special;
+	touch_fullscreen fullscreen;
 
 	float alpha;
 
 	int last_flash_index;
-
-	int fullscreen_key;
 
 	static const size_t num_train_messages = 12;
 	char * train_messages[num_train_messages];
