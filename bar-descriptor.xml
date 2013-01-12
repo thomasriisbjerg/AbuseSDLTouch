@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <qnx xmlns="http://www.qnx.com/schemas/application/1.0">
     <id>dk.riisbjerg.AbuseSDL</id>
-    <name>Corridors</name>
-    <versionNumber>1.0.0</versionNumber>
-    <buildId>4</buildId>
+    <name>Infestation</name>
+    <versionNumber>1.1.0</versionNumber>
+    <buildId>1</buildId>
     <author>Thomas Riisbjerg</author>
     <authorId>gYAAgIyAuZsVJ2N8BHcGDRugDtE</authorId>
     <description>Port of AbuseSDL. Abuse originally by Crack.com</description>
@@ -25,7 +25,7 @@
     <asset path="touchoverlay.bmp">touchoverlay.bmp</asset>
     <asset path="icon114.png">icon114.png</asset>
     <asset path="AUTHORS">AUTHORS</asset>
-    <configuration id="com.qnx.qcc.configuration.exe.debug.845768841" name="Device-Debug">
+    <configuration name="Device-Debug">
        <platformArchitecture>armle-v7</platformArchitecture>
        <asset path="Device-Debug/Abuse" entry="true" type="Qnx/Elf">Abuse</asset>
        <asset path="${workspace_loc:/SDL_mixer/Device-Debug/libSDL_mixer.so}" type="Qnx/Elf">lib/libSDL_mixer.so</asset>
@@ -34,7 +34,7 @@
        <asset path="${workspace_loc:/vorbis/Device-Debug/libvorbis.so}" type="Qnx/Elf">lib/libvorbis.so</asset>
        <asset path="${workspace_loc:/ogg/Device-Debug/libogg.so}" type="Qnx/Elf">lib/libogg.so</asset>
     </configuration>
-    <configuration id="com.qnx.qcc.configuration.exe.release.1932380840" name="Device-Release">
+    <configuration name="Device-Release">
        <platformArchitecture>armle-v7</platformArchitecture>
        <asset path="Device-Release/Abuse" entry="true" type="Qnx/Elf">Abuse</asset>
        <asset path="${workspace_loc:/ogg/Device-Release/libogg.so}" type="Qnx/Elf">lib/libogg.so</asset>
@@ -43,23 +43,23 @@
        <asset path="${workspace_loc:/TouchControlOverlay/Device-Release/libTouchControlOverlay.so}" type="Qnx/Elf">lib/libTouchControlOverlay.so</asset>
        <asset path="${workspace_loc:/vorbis/Device-Release/libvorbis.so}" type="Qnx/Elf">lib/libvorbis.so</asset>
     </configuration>
-    <configuration id="com.qnx.qcc.configuration.exe.profile.658360955" name="Device-Profile">
+    <configuration name="Device-Profile">
        <platformArchitecture>armle-v7</platformArchitecture>
        <asset path="Device-Profile/Abuse" entry="true" type="Qnx/Elf">Abuse</asset>
     </configuration>
-    <configuration id="com.qnx.qcc.configuration.exe.profile.coverage.1871856775" name="Device-Coverage">
+    <configuration name="Device-Coverage">
        <platformArchitecture>armle-v7</platformArchitecture>
        <asset path="Device-Coverage/Abuse" entry="true" type="Qnx/Elf">Abuse</asset>
     </configuration>
-    <configuration id="com.qnx.qcc.configuration.exe.debug.2000627132" name="Simulator-Debug">
+    <configuration name="Simulator-Debug">
        <platformArchitecture>x86</platformArchitecture>
        <asset path="Simulator-Debug/Abuse" entry="true" type="Qnx/Elf">Abuse</asset>
     </configuration>
-    <configuration id="com.qnx.qcc.configuration.exe.profile.1856631277" name="Simulator-Profile">
+    <configuration name="Simulator-Profile">
        <platformArchitecture>x86</platformArchitecture>
        <asset path="Simulator-Profile/Abuse" entry="true" type="Qnx/Elf">Abuse</asset>
     </configuration>
-    <configuration id="com.qnx.qcc.configuration.exe.profile.coverage.1547766048" name="Simulator-Coverage">
+    <configuration name="Simulator-Coverage">
        <platformArchitecture>x86</platformArchitecture>
        <asset path="Simulator-Coverage/Abuse" entry="true" type="Qnx/Elf">Abuse</asset>
     </configuration>
