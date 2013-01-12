@@ -179,7 +179,7 @@ int load_game(int show_all, char const *title)   // return 0 if the player escap
     int max_w=160,max_h=100;
     memset(thumbnails,0,sizeof(thumbnails));
 
-    image *first=NULL;
+    int first=-1;
 
     for (start_num=0; start_num<MAX_SAVE_GAMES; start_num++)
     {
@@ -202,7 +202,7 @@ int load_game(int show_all, char const *title)   // return 0 if the player escap
                 thumbnails[start_num] = new image(fp, se);
                 if (thumbnails[start_num]->Size().x>max_w) max_w=thumbnails[start_num]->Size().x;
                 if (thumbnails[start_num]->Size().y>max_h) max_h=thumbnails[start_num]->Size().y;
-                if (!first) first=thumbnails[start_num];
+                if (first==-1) first=start_num;
                 total_saved++;
             }
             else
@@ -214,7 +214,7 @@ int load_game(int show_all, char const *title)   // return 0 if the player escap
             thumbnails[start_num]->clear();
             console_font->PutString(thumbnails[start_num], ivec2(0), symbol_str("no_saved"));
             total_saved++;
-            if (!first) first=thumbnails[start_num];
+            if (first==-1) first=start_num;
         }
         delete fp;
     }
@@ -248,13 +248,13 @@ int load_game(int show_all, char const *title)   // return 0 if the player escap
     // Create thumbnail window 5 pixels to the right of the list window
     Jwindow *l_win=create_num_window(0,total_saved,MAX_SAVE_LINES,thumbnails);
     Jwindow *preview=wm->CreateWindow(l_win->m_pos + ivec2(l_win->m_size.x + 5, 0), ivec2(max_w, max_h), NULL, title);
-    button *accept_button = new button(0, 0, ID_LOAD_GAME_NUMBER, ok_image,
+    button *accept_button = new button(0, 0, ID_LOAD_GAME_NUMBER + first, ok_image,
             new button(34, 0, ID_CANCEL, cancel_image, NULL));
     Jwindow *accept_win = 0;
     if (has_multitouch)
     	accept_win = wm->CreateWindow(ivec2(xres / 2 - 61 / 2, yres - 38), ivec2(-1, -1), accept_button, title);
 
-    preview->m_surf->PutImage(first, ivec2(preview->x1(), preview->y1()));
+    preview->m_surf->PutImage(thumbnails[first], ivec2(preview->x1(), preview->y1()));
 
     Event ev;
     int got_level=0;
