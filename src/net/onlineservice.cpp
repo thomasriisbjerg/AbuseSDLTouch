@@ -17,7 +17,7 @@ OnlineService::OnlineService() : has_user_controller(false), has_user(false), st
 OnlineService::~OnlineService()
 {
 	SC_Client_Release(scoreloop_client);
-//	SCUI_Client_Release(scoreloop_ui_client);
+	SCUI_Client_Release(scoreloop_ui_client);
 
 	if (has_user_controller)
 		SC_UserController_Release(scoreloop_user_controller);
@@ -30,13 +30,17 @@ OnlineService::~OnlineService()
 
 void OnViewEvent(void *cookie, SC_Error_t status)
 {
-	OnlineService *onlineservice = (OnlineService *)cookie;
+	onlineservice->onViewEvent(status);
+}
 
-	//onlineservice->OnViewEvent();
+void OnlineService::onViewEvent(SC_Error_t status)
+{
+	//printf("onViewEvent: %i\n", status); fflush(stdout);
 }
 
 void OnlineService::init()
 {
+	//printf("online init\n"); fflush(stdout);
     SC_InitData_Init(&scoreloop_init_data);
     scoreloop_init_data.runLoopType = SC_RUN_LOOP_TYPE_CUSTOM;
 
@@ -46,19 +50,24 @@ void OnlineService::init()
 
     if (!newClientErrCode == SC_OK)
     {
+    	//printf("online SC_Client_New failed with code %i\n", newClientErrCode); fflush(stdout);
     	return; // handle error
     }
 
-//    SC_Error_t newUIClientErrCode = SCUI_Client_New(&scoreloop_ui_client, scoreloop_client);
+    SC_Error_t newUIClientErrCode = SCUI_Client_New(&scoreloop_ui_client, scoreloop_client);
 
-//    if (!newUIClientErrCode == SC_OK)
-//    	return; // handle error
+    if (!newUIClientErrCode == SC_OK)
+    {
+    	//printf("online SCUI_Client_New failed with code %i\n", newUIClientErrCode);
+    	return; // handle error
+    }
 
-//    SCUI_Client_SetViewEventCallback(scoreloop_ui_client, OnViewEvent, this);
+    SCUI_Client_SetViewEventCallback(scoreloop_ui_client, OnViewEvent, this);
 }
 
 void RequestUserControllerCompleted(void *cookie, SC_Error_t status)
 {
+	//printf("user controller completed state %i\n", onlineservice->getState()); fflush(stdout);
 	switch (onlineservice->getState())
 	{
 	case LOAD_USER:
@@ -78,28 +87,37 @@ void RequestUserControllerCompleted(void *cookie, SC_Error_t status)
 
 void OnlineService::connect()
 {
+	//printf("onlineservice connect\n"); fflush(stdout);
 	assert(has_user_controller == false);
 	assert(state == DISCONNECTED);
 
 	SC_Error_t createUserControllerResult = SC_Client_CreateUserController(scoreloop_client, &scoreloop_user_controller, RequestUserControllerCompleted, 0);
 	if (createUserControllerResult != SC_OK)
 	{
+		//printf("SC_Client_CreateUserController failed with code %i\n", createUserControllerResult); fflush(stdout);
 		return; // handle error
 	}
 
 	has_user_controller = true;
 
-	state = LOAD_USER;
 	SC_Error_t loadUserResult = SC_UserController_LoadUser(scoreloop_user_controller);
-	if (loadUserResult != SC_OK)
+	if (loadUserResult == SC_OK)
 	{
+		state = LOAD_USER;
+	}
+	else
+	{
+		//printf("SC_UserController_LoadUser failed with code %i\n", loadUserResult); fflush(stdout);
 		SC_UserController_Release(scoreloop_user_controller);
+		state = DISCONNECTED;
 		return; // handle error
 	}
+	printf("online connect done\n"); fflush(stdout);
 }
 
 void OnlineService::userLoaded(SC_Error_t status)
 {
+	//printf("online userLoaded\n"); fflush(stdout);
 	assert(state == LOAD_USER);
 
 	if (status != SC_OK)
@@ -108,30 +126,36 @@ void OnlineService::userLoaded(SC_Error_t status)
 		{
 			SC_UserController_Release(scoreloop_user_controller);
 			has_user_controller = false;
-			state = DISCONNECTED;
 		}
+		state = DISCONNECTED;
+		//printf("SC_UserController_LoadUser failed with code %i\n", status); fflush(stdout);
 		return; // handle error
 	}
 
 	assert(has_user_controller);
 
-	state = LOAD_USER_CONTEXT;
 	SC_Error_t loadUserContextResult = SC_UserController_LoadUserContext(scoreloop_user_controller);
-	if (loadUserContextResult != SC_OK)
+	if (loadUserContextResult == SC_OK)
+	{
+		state = LOAD_USER_CONTEXT;
+	}
+	else
 	{
 		// handle
 		if (has_user_controller)
 		{
 			SC_UserController_Release(scoreloop_user_controller);
 			has_user_controller = false;
-			state = DISCONNECTED;
 		}
+		state = DISCONNECTED;
+		//printf("SC_UserController_LoadUserContext failed with code %i\n", loadUserContextResult); fflush(stdout);
 		return;
 	}
 }
 
 void OnlineService::userContextLoaded(SC_Error_t status)
 {
+	//printf("online userContextLoaded\n"); fflush(stdout);
 	assert(state == LOAD_USER_CONTEXT);
 	if (status != SC_OK)
 	{
@@ -139,8 +163,9 @@ void OnlineService::userContextLoaded(SC_Error_t status)
 		{
 			SC_UserController_Release(scoreloop_user_controller);
 			has_user_controller = false;
-			state = DISCONNECTED;
 		}
+		state = DISCONNECTED;
+		printf("SC_UserController_LoadUserContext failed with code %i\n", status); fflush(stdout);
 		return; // handle error
 	}
 
@@ -169,10 +194,12 @@ void OnlineService::disconnect()
 	if (has_user_controller)
 		SC_UserController_Release(scoreloop_user_controller);
 	has_user_controller = false;
+	state = DISCONNECTED;
 }
 
 void OnlineService::downloadSaveGame(const char *filename)
 {
+	//printf("online download %s\n", filename); fflush(stdout);
 	const size_t pathsize = 255;
 	char originalfilepath[pathsize];
 	snprintf(originalfilepath, pathsize, "%s%s", get_save_filename_prefix(), filename);
@@ -183,7 +210,7 @@ void OnlineService::downloadSaveGame(const char *filename)
 
 	SC_String_h save_data;
 
-	//printf("getting user context entry %s... ", filename);
+	//printf("getting user context entry %s... ", filename); fflush(stdout);
 	SC_Error_t getContextResult = SC_Context_Get(user_context, filename, &save_data);
 
 	if (getContextResult == SC_OK)
@@ -296,6 +323,33 @@ void OnlineService::userContextSubmitted(SC_Error_t status)
 void OnlineService::update()
 {
 	SC_HandleCustomEvent(&scoreloop_init_data, SC_FALSE);
+}
+
+void OnlineService::updateUI(bps_event_t *event)
+{
+	//printf("updateUI\n"); fflush(stdout);
+	SCUI_Client_HandleEvent(scoreloop_ui_client, event);
+}
+
+void onViewClosedCallback(void *cookie, SCUI_Result_t viewResult, const void *data)
+{
+	onlineservice->onViewClosed(cookie, viewResult, data);
+}
+
+void OnlineService::onViewClosed(void *cookie, SCUI_Result_t viewResult, const void *data)
+{
+	//printf("view closed\n"); fflush(stdout);
+}
+
+void OnlineService::showUI()
+{
+	//printf("showUI\n"); fflush(stdout);
+	SCUI_Client_ShowFavoriteGamesView(scoreloop_ui_client, onViewClosedCallback, 0);
+}
+
+bool OnlineService::isConnected()
+{
+	return state > DISCONNECTED;
 }
 
 OnlineServiceState OnlineService::getState()

@@ -306,6 +306,7 @@
          (setq ic_start        "Neues Spiel")
          (setq ic_sell         "Beteiligte")
 	 (setq ic_networking   "Netzwerk")
+         (setq ic_favorite     "Lieblingsspiel")
          (setq no_file         "Datei '%s' nicht auffindbar")
          (setq SFXv            "SFX")
          (setq MUSICv          "Musik")

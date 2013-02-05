@@ -1312,7 +1312,8 @@ level::level(spec_directory *sd, bFILE *fp, char const *lev_name)
     first_name=(char *)malloc(len-i);
     strcpy(first_name,level_name+i);
     free(level_name);
-  } else
+  }
+  else
   {
     first_name = strdup(Name);
   }

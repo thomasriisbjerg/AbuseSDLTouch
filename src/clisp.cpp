@@ -1899,7 +1899,7 @@ long c_caller(long number, void *args)
       snprintf(path, pathsize, "%s%s", get_save_filename_prefix(), fn);
       write_resume_file(path);
       current_level->save(fn,1);
-      if (onlineservice)
+      if (onlineservice && onlineservice->isConnected())
         onlineservice->persistSaveGame(fn);
     } break;
     case 224 :

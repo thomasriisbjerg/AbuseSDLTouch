@@ -2,8 +2,8 @@
 <qnx xmlns="http://www.qnx.com/schemas/application/1.0">
     <id>dk.riisbjerg.AbuseSDL</id>
     <name>Infestation</name>
-    <versionNumber>1.1.0</versionNumber>
-    <buildId>1</buildId>
+    <versionNumber>1.1.1</versionNumber>
+    <buildId>2</buildId>
     <author>Thomas Riisbjerg</author>
     <authorId>gYAAgIyAuZsVJ2N8BHcGDRugDtE</authorId>
     <description>Port of AbuseSDL. Abuse originally by Crack.com</description>
@@ -25,6 +25,7 @@
     <asset path="touchoverlay.bmp">touchoverlay.bmp</asset>
     <asset path="icon114.png">icon114.png</asset>
     <asset path="AUTHORS">AUTHORS</asset>
+    <asset path="favorite.spe">favorite.spe</asset>
     <configuration name="Device-Debug">
        <platformArchitecture>armle-v7</platformArchitecture>
        <asset path="Device-Debug/Abuse" entry="true" type="Qnx/Elf">Abuse</asset>

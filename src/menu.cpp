@@ -42,6 +42,8 @@
 
 #ifdef __QNXNTO__
 #include "onlineservice.h"
+
+const int ID_FAVORITE_GAME = 0xFFFFFFFF;
 #endif // __QNXNTO__
 
 extern net_protocol *prot;
@@ -397,7 +399,7 @@ void scroll_text_file(const char *filename)
                 {
                     wm->get_event(ev);
 #ifdef __QNXNTO__
-                    if (onlineservice)
+                    if (onlineservice && onlineservice->isConnected())
                       onlineservice->update();
 #endif // __QNXNTO__
                     if (ev.type==EV_KEY || (ev.type==EV_MOUSE_BUTTON && ev.mouse_button))
@@ -449,7 +451,7 @@ void show_sell(int abortable)
         wm->flush_screen();
         wm->get_event(ev);
 #ifdef __QNXNTO__
-        if (onlineservice)
+        if (onlineservice && onlineservice->isConnected())
           onlineservice->update();
 #endif // __QNXNTO__
       } while (ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON);
@@ -475,107 +477,116 @@ void menu_handler(Event &ev, InputManager *inm)
     {
       switch (ev.message.id)
       {
-    case ID_LIGHT_OFF :
-    if (!volume_window)
-    {
-      gamma_correct(pal,1);
-    } break;
-    case ID_RETURN :
-    if (!volume_window)
-    {
-      the_game->set_state(RUN_STATE);
-    } break;
-    case ID_START_GAME :
-    if (!volume_window)
-    {
-      the_game->load_level(level_file);
-      the_game->set_state(RUN_STATE);
-      view *v;
-      for (v=player_list; v; v=v->next)
-        if (v->m_focus)
-          v->reset_player();
+        case ID_LIGHT_OFF :
+        if (!volume_window)
+        {
+          gamma_correct(pal,1);
+        } break;
+        case ID_RETURN :
+        if (!volume_window)
+        {
+          the_game->set_state(RUN_STATE);
+        } break;
+        case ID_START_GAME :
+        if (!volume_window)
+        {
+          the_game->load_level(level_file);
+          the_game->set_state(RUN_STATE);
+          view *v;
+          for (v=player_list; v; v=v->next)
+            if (v->m_focus)
+              v->reset_player();
 
-    } break;
+        } break;
 
 
         case ID_LOAD_PLAYER_GAME :
-    if (!volume_window)
-    {
-      int got_level=load_game(0,symbol_str("LOAD"));
-      the_game->reset_keymap();
-      if (got_level)
-      {
-        const size_t namesize = 256;
-        char name[namesize];
-        snprintf(name,namesize,"%ssave%04d.spe", get_save_filename_prefix(), got_level);
-
-        the_game->load_level(name);
-        the_game->set_state(RUN_STATE);
-      }
-    } break;
-
-
-    case ID_VOLUME :
-    if (!volume_window)
-    { create_volume_window(); } break;
-
-    case ID_MEDIUM :
-    {
-      l_difficulty->SetValue(l_medium);
-      save_difficulty();
-    } break;
-    case ID_HARD :
-    {
-      l_difficulty->SetValue(l_hard);
-      save_difficulty();
-    } break;
-    case ID_EXTREME :
-    {
-      l_difficulty->SetValue(l_extreme);
-      save_difficulty();
-    } break;
-    case ID_EASY :
-    {
-      l_difficulty->SetValue(l_easy);
-      save_difficulty();
-    } break;
-
-    case ID_NETWORKING :
-    {
-      if (!volume_window)
-      {
-        net_configuration *cfg=new net_configuration;
-        if (cfg->input())
+        if (!volume_window)
         {
-          if (main_net_cfg) delete main_net_cfg;
-          main_net_cfg=cfg;
-        } else delete cfg;
-        the_game->draw(0);
-        inm->redraw();
-      }
-    } break;
+          int got_level=load_game(0,symbol_str("LOAD"));
+          the_game->reset_keymap();
+          if (got_level)
+          {
+            const size_t namesize = 256;
+            char name[namesize];
+            snprintf(name,namesize,"%ssave%04d.spe", get_save_filename_prefix(), got_level);
 
-    case ID_SHOW_SELL :
-    if (!volume_window)
-    {
-      show_sell(1);
-      main_screen->clear();
-      if (title_screen>=0)
-      {
-        image *im = cache.img(title_screen);
-        main_screen->PutImage(im, main_screen->Size() / 2 - im->Size() / 2);
-      }
-      inm->redraw();
-      fade_in(NULL,8);
-      wm->flush_screen();
+            the_game->load_level(name);
+            the_game->set_state(RUN_STATE);
+          }
+        } break;
 
-    } break;
+
+        case ID_VOLUME :
+        if (!volume_window)
+        { create_volume_window(); } break;
+
+        case ID_MEDIUM :
+        {
+          l_difficulty->SetValue(l_medium);
+          save_difficulty();
+        } break;
+        case ID_HARD :
+        {
+          l_difficulty->SetValue(l_hard);
+          save_difficulty();
+        } break;
+        case ID_EXTREME :
+        {
+          l_difficulty->SetValue(l_extreme);
+          save_difficulty();
+        } break;
+        case ID_EASY :
+        {
+          l_difficulty->SetValue(l_easy);
+          save_difficulty();
+        } break;
+
+        case ID_NETWORKING :
+        {
+          if (!volume_window)
+          {
+            net_configuration *cfg=new net_configuration;
+            if (cfg->input())
+            {
+              if (main_net_cfg) delete main_net_cfg;
+              main_net_cfg=cfg;
+            } else delete cfg;
+            the_game->draw(0);
+            inm->redraw();
+          }
+        } break;
+
+        case ID_SHOW_SELL :
+        if (!volume_window)
+        {
+          show_sell(1);
+          main_screen->clear();
+          if (title_screen>=0)
+          {
+            image *im = cache.img(title_screen);
+            main_screen->PutImage(im, main_screen->Size() / 2 - im->Size() / 2);
+          }
+          inm->redraw();
+          fade_in(NULL,8);
+          wm->flush_screen();
+
+        } break;
+
+        case ID_FAVORITE_GAME:
+        if (onlineservice && onlineservice->isConnected())
+        {
+          onlineservice->showUI();
+        } break;
       } break;
-    } break;
+    } break; // EV_MESSAGE
     case EV_CLOSE_WINDOW :
     {
       if (ev.window==volume_window)
-      { wm->close_window(volume_window); volume_window=NULL; }
+      {
+        wm->close_window(volume_window);
+        volume_window=NULL;
+      }
     } break;
   }
 }
@@ -638,35 +649,70 @@ ico_button *make_default_buttons(int x,int &y, ico_button *append_list)
 
   }
 
+#if !defined(__QNXNTO__)
   ico_button *color=load_icon(4,ID_LIGHT_OFF,x,y,h,NULL,"ic_gamma");                          y+=h;
   ico_button *volume=load_icon(5,ID_VOLUME,x,y,h,NULL,"ic_volume");                            y+=h;
+#else
+  ico_button *color = 0;
+  ico_button *volume = 0;
+#endif // __QNXNTO__
   ico_button *sell=NULL;
 
   if (prot)
   {
     sell=load_icon(11,ID_NETWORKING,x,y,h,NULL,"ic_networking");
     y+=h;
-  } else
+  }
+  else
   {
     sell=load_icon(2,ID_SHOW_SELL,x,y,h,NULL,"ic_sell");
     y+=h;
   }
+#ifdef __QNXNTO__
+  ico_button *favorite;
+  if (onlineservice && onlineservice->isConnected())
+  {
+    const char *filename = "../favorite.spe";
+    bFILE *fp = open_file(filename, "r");
+    if(!fp->open_failure())
+    {
+      int da=cache.reg(filename,"favorite1.pcx",SPEC_IMAGE,1); // active down
+      int u=cache.reg(filename,"favorite2.pcx",SPEC_IMAGE,1); // inactive up
+      int ua=cache.reg(filename,"favorite3.pcx",SPEC_IMAGE,1); // active up
+      h=cache.img(da)->Size().y;
+      favorite=new ico_button(x,y,ID_FAVORITE_GAME,u,u,ua,da,NULL,-1,"ic_favorite");
+      y+=h;
+    }
+    else
+    {
+      favorite=0;
+    }
+  }
+  else
+  {
+	favorite=0;
+  }
+#else
+  ico_button * const favorite = 0;
+#endif
   ico_button *quit=load_icon(6,ID_QUIT,x,y,h,NULL,"ic_quit");                                y+=h;
 
+  start->next=set ? (ifield*)set : color ? (ifield*)color : volume ? (ifield*)volume : sell ? (ifield*)sell : (ifield*)quit;
+
   if (set)
-  {
-    start->next=set;
-    set->next=color;
-  }
-  else start->next=color;
+    set->next=color ? color : volume ? volume : sell ? sell : favorite ? favorite : quit;
 
+  if (color)
+    color->next=volume ? volume : sell ? sell : favorite ? favorite : quit;
 
-  color->next=volume;
+  if (volume)
+	volume->next=sell ? sell : favorite ? favorite : quit;
+
   if (sell)
-  {
-    volume->next=sell;
-    sell->next=quit;
-  } else volume->next=quit;
+    sell->next=favorite ? favorite : quit;
+
+  if (favorite)
+    favorite->next=quit;
 
   ico_button *list=append_list;
 
@@ -729,7 +775,7 @@ void main_menu()
         time_marker new_time;
 
 #ifdef __QNXNTO__
-        if (onlineservice)
+        if (onlineservice && onlineservice->isConnected())
           onlineservice->update();
 #endif // __QNXNTO__
 

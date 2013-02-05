@@ -365,7 +365,7 @@ void show_end2()
     if (wm->IsPending())
       wm->get_event(ev);
 #ifdef __QNXNTO__
-    if (onlineservice)
+    if (onlineservice && onlineservice->isConnected())
       onlineservice->update();
 #endif // __QNXNTO__
 
@@ -401,7 +401,7 @@ void show_end2()
     {
       wm->get_event(ev);
 #ifdef __QNXNTO__
-      if (onlineservice)
+      if (onlineservice && onlineservice->isConnected())
         onlineservice->update();
 #endif // __QNXNTO__
     }
@@ -437,7 +437,8 @@ void share_end()
   wm->SetMouseShape(blank.copy(), ivec2(0, 0)); // don't show mouse
   main_screen->clear();
 
-  image *im=cache.img(cache.reg("art/fore/endgame.spe","tbc",SPEC_IMAGE,1));
+//  image *im=cache.img(cache.reg("art/fore/endgame.spe","tbc",SPEC_IMAGE,1)); // THOMASR
+  image *im=cache.img(cache.reg("art/endgame.spe","tbc",SPEC_IMAGE,1)); // THOMASR from original AbuseSrc
 
   void *to_be = LSymbol::FindOrCreate("to_be_continued")->GetValue();
   PtrRef r1(to_be);
@@ -458,7 +459,7 @@ void share_end()
 
   Event ev; ev.type=EV_SPURIOUS;
   time_marker start;
-  for (i=0; i<320 && ev.type!=EV_KEY; i++)
+  for (i=0; i<320 && ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON; i++)
   {
     main_screen->PutImage(im, ivec2(dx, dy));
     console_font->PutString(main_screen, ivec2(xres / 2 + 35, yres / 2 + 100 - console_font->Size().y - 2),
@@ -467,24 +468,24 @@ void share_end()
     text_draw(205-i,dx+10,dy,dx+319-10,dy+199,lstring_value(mid_plot),wm->font(),cmap,wm->bright_color());
     wm->flush_screen();
     time_marker now; while (now.diff_time(&start)<0.18) now.get_time(); start.get_time();
-    while (wm->IsPending() && ev.type!=EV_KEY)
+    while (wm->IsPending() && ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON)
     {
       wm->get_event(ev);
 #ifdef __QNXNTO__
-      if (onlineservice)
+      if (onlineservice && onlineservice->isConnected())
         onlineservice->update();
 #endif // __QNXNTO__
     }
   }
 
-  if (ev.type!=EV_KEY)
+  if (ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON)
   {
     do
     {
       wm->flush_screen();
       wm->get_event(ev);
 #ifdef __QNXNTO__
-      if (onlineservice)
+      if (onlineservice && onlineservice->isConnected())
         onlineservice->update();
 #endif // __QNXNTO__
     } while (ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON);
@@ -504,7 +505,8 @@ void show_end()
   wm->SetMouseShape(blank.copy(), ivec2(0, 0));      // don't show mouse
   main_screen->clear();
 
-  image *im=cache.img(cache.reg("art/fore/endgame.spe","end.pcx",SPEC_IMAGE,1));
+//  image *im=cache.img(cache.reg("art/fore/endgame.spe","end.pcx",SPEC_IMAGE,1)); // THOMASR
+  image *im=cache.img(cache.reg("art/endgame.spe","end.pcx",SPEC_IMAGE,1)); // THOMASR from original AbuseSrc
 
   int dx=(xres+1)/2-320/2,dy=(yres+1)/2-200/2;
 
@@ -521,31 +523,31 @@ void show_end()
 
   Event ev; ev.type=EV_SPURIOUS;
   time_marker start;
-  for (i=0; i<320 && ev.type!=EV_KEY; i++)
+  for (i=0; i<320 && ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON; i++)
   {
     main_screen->PutImage(im, ivec2(dx, dy));
 
     text_draw(205-i,dx+10,dy,dx+319-10,dy+199,lstring_value(end_plot),wm->font(),cmap,wm->bright_color());
     wm->flush_screen();
     time_marker now; while (now.diff_time(&start)<0.18) now.get_time(); start.get_time();
-    while (wm->IsPending() && ev.type!=EV_KEY)
+    while (wm->IsPending() && ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON)
     {
       wm->get_event(ev);
 #ifdef __QNXNTO__
-      if (onlineservice)
+      if (onlineservice && onlineservice->isConnected())
         onlineservice->update();
 #endif // __QNXNTO__
     }
   }
 
-  if (ev.type!=EV_KEY)
+  if (ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON)
   {
     do
     {
       wm->flush_screen();
       wm->get_event(ev);
 #ifdef __QNXNTO__
-      if (onlineservice)
+      if (onlineservice && onlineservice->isConnected())
         onlineservice->update();
 #endif // __QNXNTO__
     } while (ev.type!=EV_KEY && ev.type!=EV_MOUSE_BUTTON);

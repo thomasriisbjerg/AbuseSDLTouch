@@ -300,6 +300,7 @@ plan \n"
          (setq ic_start        "D‚marrer nouveau jeu")
          (setq ic_sell         "G‚n‚rique")
          (setq ic_networking   "Jeu sur r‚seau")
+         (setq ic_favorite     "Jeu pr‚f‚r‚")
          (setq no_file         "Fichier introuvable '%s'")
          (setq SFXv            "Son")
          (setq MUSICv          "Volume")

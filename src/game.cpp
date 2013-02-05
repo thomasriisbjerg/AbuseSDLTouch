@@ -1276,14 +1276,14 @@ void do_title()
             wm->flush_screen();
             time_marker now;
 
-            while(wm->IsPending() && ev.type != EV_KEY)
+            while(wm->IsPending() && ev.type != EV_KEY && ev.type != EV_MOUSE_BUTTON)
                 wm->get_event(ev);
 
             if((i % 5) == 0 && DEFINEDP(space_snd) && (sound_avail & SFX_INITIALIZED))
                 cache.sfx(lnumber_value(space_snd))->play(sfx_volume * 90 / 127);
 
 #ifdef __QNXNTO__
-            if (onlineservice)
+            if (onlineservice && onlineservice->isConnected())
               onlineservice->update();
 #endif // __QNXNTO__
 
@@ -1488,7 +1488,6 @@ Game::Game(int argc, char **argv)
           buffer[filesize] = 0;
 
           current_level->set_name(buffer);
-          printf("autosave load set name to %s\n", buffer); fflush(stdout);
         }
       }
       delete fp;
@@ -2528,9 +2527,10 @@ int main(int argc, char *argv[])
             {
                 delete current_level; current_level = NULL;
 
+                the_game->set_state(MENU_STATE);
+
                 show_end();
 
-                the_game->set_state(MENU_STATE);
                 req_end = 0;
             }
 
@@ -2556,7 +2556,7 @@ int main(int argc, char *argv[])
             service_net_request();
 
 #ifdef __QNXNTO__
-            if (onlineservice)
+            if (onlineservice && onlineservice->isConnected())
               onlineservice->update();
 #endif // __QNXNTO__
 

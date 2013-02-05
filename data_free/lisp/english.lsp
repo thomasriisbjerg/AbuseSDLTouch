@@ -293,16 +293,17 @@
 
          (setq ic_return       "Return to Game")        ; ----
          (setq ic_quit         "Quit Abuse")            ;  |
-	 (setq ic_volume       "Volume Control")        ;  |
-	 (setq ic_gamma        "Gamma Correction")      ;  |
-	 (setq ic_easy         "Difficulty : Wimp")     ;  |
-	 (setq ic_medium       "Difficulty : Easy")     ;  |
-	 (setq ic_hard         "Difficulty : Normal")   ;  \/
-	 (setq ic_extreme      "Difficulty : Extreme")  ; don't make any strings longer than this!
+         (setq ic_volume       "Volume Control")        ;  |
+         (setq ic_gamma        "Gamma Correction")      ;  |
+         (setq ic_easy         "Difficulty : Wimp")     ;  |
+         (setq ic_medium       "Difficulty : Easy")     ;  |
+         (setq ic_hard         "Difficulty : Normal")   ;  \/
+         (setq ic_extreme      "Difficulty : Extreme")  ; don't make any strings longer than this!
          (setq ic_load         "Load Saved Game")       ;  /\
          (setq ic_start        "Start New Game")        ;  |
-	 (setq ic_sell         "Credits")               ;  |
-	 (setq ic_networking   "Networking")            ; ----
+         (setq ic_sell         "Credits")               ;  |
+         (setq ic_networking   "Networking")            ; ----
+         (setq ic_favorite     "Favorite game")
 
 
 	 (setq no_file         "Could not find file '%s'")

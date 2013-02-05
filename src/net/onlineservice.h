@@ -29,10 +29,15 @@ public:
 	void userLoaded(SC_Error_t status);
 	void userContextLoaded(SC_Error_t status);
 	void userContextSubmitted(SC_Error_t status);
+	void onViewEvent(SC_Error_t status);
 	void disconnect();
 	void downloadSaveGame(const char *filename);
 	void persistSaveGame(const char *filename);
 	void update();
+	void updateUI(bps_event_t *event);
+	void showUI();
+	void onViewClosed(void *cookie, SCUI_Result_t viewResult, const void *data);
+	bool isConnected();
 	OnlineServiceState getState();
 
 private:
