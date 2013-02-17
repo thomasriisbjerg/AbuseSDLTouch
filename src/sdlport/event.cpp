@@ -23,6 +23,7 @@
 #endif
 
 #include <SDL.h>
+#include <SDL_syswm.h>
 
 #include "common.h"
 
@@ -410,18 +411,18 @@ void EventHandler::SysEvent(Event &ev)
 	case SDL_USEREVENT:
 		switch (sdlev.user.code)
 		{
-		case 0:
-			if (onlineservice && onlineservice->isConnected())
-			{
-				onlineservice->updateUI((bps_event_t *)sdlev.user.data1);
-			}
-			break;
 		case NAVIGATOR_SWIPE_DOWN:
 			ev.type = EV_KEY;
 			ev.key = JK_ESC;
 			break;
 		}
 		break;
+		case SDL_SYSWMEVENT:
+			if (onlineservice && onlineservice->isConnected())
+			{
+				onlineservice->updateUI(sdlev.syswm.msg->event);
+			}
+			break;
 #endif // __QNXNTO__
     case SDL_KEYDOWN:
     case SDL_KEYUP:
